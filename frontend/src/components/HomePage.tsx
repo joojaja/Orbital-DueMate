@@ -6,7 +6,14 @@ import Header from "./Header";
 
 function HomePage() {
     console.log(AuthService.getCurrentUser())
-    const user = AuthService.getCurrentUser().name || "Guest";
+
+    const token = AuthService.getCurrentUser();
+    let user = "";
+    if (token === null) {
+        user = "Guest";
+    } else {
+        user = AuthService.getCurrentUser().name;
+    }
 
 
     return (

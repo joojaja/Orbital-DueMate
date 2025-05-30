@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, TextField, Box, Typography, Alert } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthService from "../services/authService";
 
 function Login() {
@@ -9,11 +9,21 @@ function Login() {
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
-    const authorizedMessage = useLocation().state;
-    if (authorizedMessage !== null) {
-        setMessage(authorizedMessage);
+    // Check if there is an unauthorized message from Navigate in protectedRoute
+    let authorizedMessage = useLocation().state;
+    useEffect(() => {
+    // Check if the authorizedMessage exists and has a message property
+    if (authorizedMessage && authorizedMessage.message) {
+        setMessage(authorizedMessage.message);
         setRenderMessage(true);
+
+        // Clear state from browser history so we do not see the message again on refresh
+        window.history.replaceState({}, document.title);
+    } else {
+        setMessage("");
+        setRenderMessage(false);
     }
+    },[authorizedMessage])
 
     const handleLogin = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
