@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button, TextField, Box, Typography, Alert } from "@mui/material";
 import { useState } from "react";
-
+import AuthService from "../services/authService";
 
 function Login() {
     const [formData, setFormData] = useState({email: "", password: ""});
@@ -9,7 +9,27 @@ function Login() {
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = () => navigate("/");
+    const authorizedMessage = useLocation().state;
+    if (authorizedMessage !== null) {
+        setMessage(authorizedMessage);
+        setRenderMessage(true);
+    }
+
+    const handleLogin = (e: { preventDefault: () => void; }) => {
+        e.preventDefault();
+        setRenderMessage(false);
+        setMessage("")
+
+        AuthService.login(formData.email, formData.password)
+        .then(() => navigate("/home"))
+        .catch((error: { response: { data: { message: any; }; }; message: any; toString: () => any; }) => {
+            const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString() 
+            || "Login failed. Please try again.";
+            setMessage(errorMessage);
+            setRenderMessage(true);
+            console.log(error);
+        })
+    };
 
     const handleFormChange = (e: { target: { name: string; value: string; }; }) => {
         setFormData({...formData, [e.target.name]: e.target.value});
@@ -23,7 +43,7 @@ function Login() {
             justifyContent: "center",
             alignItems: "center",
         }}>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleLogin}>
             <div className="Login">
                 <Box sx={{
                     width: 300,

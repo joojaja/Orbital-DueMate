@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.security.services.*;
 
+// This class is a filter that intercepts HTTP requests to check for a valid JWT token.
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
@@ -25,6 +26,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    // This method is to indicate that we do not want to filter requests that start with "/api/auth/".
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();

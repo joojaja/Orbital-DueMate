@@ -9,15 +9,15 @@ import com.example.models.*;
 
 public class UserDetailsImpl implements UserDetails {
     private Long id;
-    private String username;
+    private String name;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     
-    public UserDetailsImpl(Long id, String username, String email, String password,
+    public UserDetailsImpl(Long id, String name, String email, String password,
             Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
-        this.username = username;
+        this.name = name;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
@@ -28,7 +28,7 @@ public class UserDetailsImpl implements UserDetails {
         
         return new UserDetailsImpl(
                 user.getId(),
-                user.getUsername(),
+                user.getName(),
                 user.getEmail(),
                 user.getPassword(),
                 Collections.singletonList(authority));
@@ -37,17 +37,18 @@ public class UserDetailsImpl implements UserDetails {
     // Implement all UserDetails methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return this.authorities;
     }
     
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
     
+    // Since we are using email to login we have to override this method and return the email instead of the name
     @Override
     public String getUsername() {
-        return username;
+        return this.email;
     }
     
     @Override
@@ -75,7 +76,7 @@ public class UserDetailsImpl implements UserDetails {
         return id;
     }
     
-    public String getEmail() {
-        return email;
+    public String getName() {
+        return name;
     }
 }

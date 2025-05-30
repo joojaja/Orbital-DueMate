@@ -23,8 +23,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -43,13 +43,13 @@ public class User {
     public User() {};
 
     public User(String name, String email, String password) {
-        this.username = name;
+        this.name = name;
         this.email = email;
         this.password = password;
     }
 
-    public String getUsername() {
-        return this.username;
+    public String getName() {
+        return this.name;
     }
 
     @PrePersist

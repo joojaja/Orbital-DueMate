@@ -1,19 +1,34 @@
 import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react-router-dom";
 import { Button, TextField, Box, Typography, Alert } from "@mui/material";
 import { useState } from "react";
-
+import AuthService from "../services/authService";
 
 function Register() {
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
     const [renderMessage, setRenderMessage] = useState(false);
     const [message, setMessage] = useState("");
+    const [messageSeverity, setMessageSeverity] = useState<"error" | "warning" | "info" | "success">("warning");
 
     const navigate = useNavigate();
 
-    const handleSubmit = (e: { preventDefault: () => void; }) => {
+    const handleRegister = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
-        navigate("/");
-    }
+        setRenderMessage(false);
+        setMessage("")
+
+        AuthService.register(formData.name, formData.email, formData.password)
+        .then(() => {setMessage("Account registration successful");
+        setRenderMessage(true);
+        setMessageSeverity("success")
+        })
+        .catch((error: { response: { data: { message: any; }; }; message: any; toString: () => any; }) => {
+            const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString() 
+            || "Login failed. Please try again.";
+            setMessage(errorMessage);
+            setRenderMessage(true);
+            setMessageSeverity("warning");
+        })
+    };
 
     const handleFormChange = (e: { target: { name: string; value: string; }; }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,7 +42,7 @@ function Register() {
             justifyContent: "center",
             alignItems: "center",
         }}>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleRegister}>
             <div className="Register">
                 <Box sx={{
                     width: 300,
@@ -39,7 +54,7 @@ function Register() {
                     borderRadius: 2,
                     backgroundColor: "#fafafa",
                 }}>
-                    {renderMessage && (<Alert variant="filled" severity="warning"> {message} </Alert>)}
+                    {renderMessage && (<Alert variant="filled" severity={messageSeverity}> {message} </Alert>)}
                     <Typography variant="h3" align="center">
                         Register
                     </Typography>
