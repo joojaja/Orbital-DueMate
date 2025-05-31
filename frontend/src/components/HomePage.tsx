@@ -5,14 +5,12 @@ import AuthService from "../services/authService";
 import Header from "./Header";
 
 function HomePage() {
-    console.log(AuthService.getCurrentUser())
-
     const token = AuthService.getCurrentUser();
     let user = "";
     if (token === null) {
         user = "Guest";
     } else {
-        user = AuthService.getCurrentUser().name;
+        user = token.name;
     }
 
 

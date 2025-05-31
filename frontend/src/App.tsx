@@ -1,17 +1,20 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link, useNavigate, Navigate } from 'react-router-dom';
 
 import ProtectedRoute from './components/protectedRoute';
-import Default from './components/Default';
 import Login from './components/Login';
 import Register from './components/Register';
-import HomePage from './components/HomePage';
 import CalendarDashboard from './components/CalendarDashboard';
+import AuthService from './services/authService';
+
 function App() {
+  let isAuthenticated = AuthService.getCurrentUser();
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={isAuthenticated ? <CalendarDashboard /> : <Navigate to = "/login"/>} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to = "/home"/> : <Login />} />
         <Route path="/register" element={<Register />} />
 
         {/*Protected routes*/}
