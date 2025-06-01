@@ -1,0 +1,19 @@
+import { BrowserRouter as Router, Route, Routes, Link, useNavigate, Navigate, Outlet} from "react-router-dom";
+import { Button, TextField, Box, Typography, Alert } from "@mui/material";
+import { useState } from "react";
+import AuthService from "../services/authService";
+
+// This component is used to protect routes that require authentication
+const ProtectedRoute = () => {
+    console.log(AuthService.getCurrentUser())
+
+    // Check if the user is authenticated, if the token is stored in localStorage
+    if (AuthService.getCurrentUser() === null) {
+        return <Navigate to ="/" state ={{message: "You must be logged in to view this page." }}/>; 
+    }
+
+    // Render the child components if the user is authenticated
+    return <Outlet />; 
+}
+
+export default ProtectedRoute;

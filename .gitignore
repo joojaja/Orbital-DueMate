@@ -1,0 +1,49 @@
+# === Node.js / React ===
+node_modules/
+dist/
+build/
+.env
+.env.*           # .env.development, .env.local
+*.log
+
+# === Vite/CRA Temp Files ===
+.vite/
+.cache/
+*.cache
+
+# === Spring Boot (Maven) ===
+/backend/target/
+*.jar
+*.war
+
+# === Gradle (if used) ===
+/backend/build/
+.gradle/
+
+# === Database ===
+*.db
+*.sqlite
+*.sql             # ignore dumps with sensitive data
+/db/*.sql         # optionally ignore database SQL scripts
+!db/init.sql      # keep initial schema if safe
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.iml
+*.swp
+
+# === macOS / Windows System ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# === Coverage / Test / Reports ===
+coverage/
+*.lcov
