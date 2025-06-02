@@ -13,14 +13,17 @@ npm start
 
 ## How to set up and run back-end
 ---
-
+- Ensure that you have Java 24 installed (```java --version```)
 - Ensure you have PostgreSQL installed already
 - Create a database
 - Ensure that you have setup your user and password in PgAdmin4 already
 
-Go to backend/src/main/java/com/example/resources/application.properties and edit this 3:
+Go to backend/src/main/java/com/example/resources/application.properties and edit this three things
+
 spring.datasource.url=jdbc:postgresql://localhost:5432/{change to your database name}
+
 spring.datasource.username={change to your username}
+
 spring.datasource.password={change to your password}
 
 ```bash
