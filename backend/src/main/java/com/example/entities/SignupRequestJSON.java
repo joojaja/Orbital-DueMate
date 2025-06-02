@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignupRequest {
+public class SignupRequestJSON {
     private String name;
     private String email;
     private String password;

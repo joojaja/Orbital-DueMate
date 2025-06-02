@@ -11,41 +11,41 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-// import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-// import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.security.jwt.*;
-// import com.example.security.services.UserDetailsServiceImpl;
 
+// Configures Spring Security
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     
-    private final AuthTokenFilter authTokenFilter;
+    private final AuthenticationTokenFilter authenticationTokenFilter;
     
-    public SecurityConfig(AuthTokenFilter authTokenFilter) {
-        this.authTokenFilter = authTokenFilter;
+    public SecurityConfig(AuthenticationTokenFilter authenticationTokenFilter) {
+        this.authenticationTokenFilter = authenticationTokenFilter;
     }
 
+
+    // Let Spring manage the returned object as beans
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
+    // Let Spring manage the returned object as beans
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // Let Spring manage the returned object as beans
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http.csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions: server doesnt store user info but uses the token to check
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll() // For /api/auth/.... do not require authentication
                 .anyRequest().authenticated()
-            )
-            .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+            ).addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
