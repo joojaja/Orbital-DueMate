@@ -7,14 +7,17 @@ import java.util.Collection;
 import java.util.Collections;
 import com.example.models.*;
 
-public class UserDetailsImpl implements UserDetails {
+/** 
+ * Representation of user that is used for our authentication using Spring Security
+ * */
+public class OurUserDetails implements UserDetails {
     private Long id;
     private String name;
     private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     
-    public UserDetailsImpl(Long id, String name, String email, String password,
+    public OurUserDetails(Long id, String name, String email, String password,
             Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.name = name;
@@ -23,10 +26,10 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
     
-    public static UserDetailsImpl build(User user) {
+    public static OurUserDetails build(User user) {
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_USER");
         
-        return new UserDetailsImpl(
+        return new OurUserDetails(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),

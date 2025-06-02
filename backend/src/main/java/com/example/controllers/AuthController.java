@@ -14,73 +14,65 @@ import com.example.models.*;
 import com.example.entities.*;
 // import java.util.Date;
 
+// Setup CORS
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
+// Set mapping
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtils jwtUtils;
+    private final JWTUtility jwtUtility;
     
     public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-                         PasswordEncoder passwordEncoder, JwtUtils jwtUtils) {
+            PasswordEncoder passwordEncoder, JWTUtility jwtUtility) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtils = jwtUtils;
+        this.jwtUtility = jwtUtility;
     }
-    
-    @PostMapping("/signin") // the endpoint for user login; /api/auth/signin
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+
+    // the endpoint for user login; /api/auth/signin
+    @PostMapping("/signin")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestJSON loginRequest) {
         try {
-        // Authenticate the user using the authentication manager
-        Authentication authentication = authenticationManager.authenticate(
+            // Authenticate/ Valid the user using the authentication manager
+            Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        
-        // Set the authentication in the security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        // Generate JWT token
-        String jwt = jwtUtils.generateJwtToken(authentication);
-        
-        // Get all of the user details from the authentication object
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        
-        // Return JSON response with the JWT token and user details
-        return ResponseEntity.ok(new JwtResponse(
-                jwt,
-                userDetails.getId(),
-                userDetails.getName(),
-                userDetails.getUsername()));
+
+            // Set authentication in the security context
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Generate JWT token
+            String jwt = this.jwtUtility.generateJwtToken(authentication);
+
+            // Get all of the user details from the authentication object
+            OurUserDetails userDetails = (OurUserDetails) authentication.getPrincipal();
+
+            // Return JSON response with the JWT token and user details
+            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
+                userDetails.getName(), userDetails.getUsername(), "Bearer"));
 
         } catch (Exception e) {
-            // If the details are invalid, return an error response
-            return ResponseEntity
-            .status(401)
-            .body(new MessageResponse("Invalid username or password"));
+            // Return error if invalid details
+            return ResponseEntity.status(401).body(new MessageResponseJSON("Invalid username or password"));
         }
     }
-    
+
     @PostMapping("/signup") // the endpoint for user register; /api/auth/signin
-    public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
-        // if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-        //     return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
-        // }
-        
+    public ResponseEntity<?> registerUser(@RequestBody SignupRequestJSON signUpRequest) {
         // Check if the email is already taken
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             // Return error response if email is already in use
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+            return ResponseEntity.status(409).body(new MessageResponseJSON("Error: Email is already in use!"));
         }
-        
+
         // Create new user's account
-        User user = new User(
-                signUpRequest.getName(),
-                signUpRequest.getEmail(),
-                passwordEncoder.encode(signUpRequest.getPassword()));
+        User user = new User(signUpRequest.getName(), signUpRequest.getEmail(), passwordEncoder.encode(signUpRequest.getPassword()));
         userRepository.save(user);
-        
+
         // Return a success message
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.status(200).body(new MessageResponseJSON("User registered successfully!"));
     }
 }

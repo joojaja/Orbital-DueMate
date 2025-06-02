@@ -8,20 +8,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.repository.*;
 import com.example.models.*;
 
+// Implement UserDetailsService to load our user based on their email.
+// Spring service
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class OurUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     
-    public UserDetailsServiceImpl(UserRepository userRepository) {
+    public OurUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
     
     @Override
+    // Database transaction 
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User Not Found with email: " + email));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with email: " + email + " does not exist"));
         
-        return UserDetailsImpl.build(user);
+        return OurUserDetails.build(user);
     }
 }

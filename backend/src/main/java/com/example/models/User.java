@@ -14,11 +14,16 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import java.time.Instant;
 
+// Definition of the User table
 
+// Map to user table in db
 @Entity
+// Specify table name
 @Table(name = "users")
+// Autocreate toString, equals, hashCode, getters and setters 
 @Data
 public class User {
+    // Designate primary key
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -51,13 +56,15 @@ public class User {
     public String getName() {
         return this.name;
     }
-
+    
+    // Update createdAt and updatedAt when creating a new user
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 
+    // Update createdAt and updatedAt when creating a new user
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();

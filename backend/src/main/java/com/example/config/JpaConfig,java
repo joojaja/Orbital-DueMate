@@ -1,5 +1,0 @@
-@Configuration
-@EnableJpaAuditing
-public class JpaConfig {
-    // This configuration enables JPA auditing for automatic timestamping
-}
