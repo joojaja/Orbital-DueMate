@@ -2,10 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 import ProtectedRoute from './components/protectedRoute';
-import Login from './components/Login';
-import Register from './components/Register';
-import CalendarDashboard from './components/CalendarDashboard';
-import AuthService from './services/authService';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import CalendarDashboard from './pages/CalendarDashboard';
+import AuthService from './services/authenticationService';
 
 function App() {
   let isAuthenticated = AuthService.getCurrentUser();

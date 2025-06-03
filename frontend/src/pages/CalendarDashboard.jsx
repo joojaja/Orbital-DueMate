@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "../styles/CalendarDashboard.css";
-import AuthService from "../services/authService";
+import AuthService from "../services/authenticationService";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 

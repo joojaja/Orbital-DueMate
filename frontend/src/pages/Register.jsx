@@ -1,48 +1,34 @@
-import { useNavigate, useLocation } from "react-router-dom";
 import { Button, TextField, Box, Typography, Alert } from "@mui/material";
-import { useEffect, useState } from "react";
-import AuthService from "../services/authService";
+import { useState } from "react";
+import AuthenticationService from "../services/authenticationService";
 
-function Login() {
-    const [formData, setFormData] = useState({email: "", password: ""});
+function Register() {
+    const [formData, setFormData] = useState({ name: "", email: "", password: "" });
     const [renderMessage, setRenderMessage] = useState(false);
     const [message, setMessage] = useState("");
-    const navigate = useNavigate();
+    const [messageSeverity, setMessageSeverity] = useState("warning");
 
-    // Check if there is an unauthorized message from Navigate in protectedRoute
-    let authorizedMessage = useLocation().state;
-    useEffect(() => {
-    // Check if the authorizedMessage exists and has a message property
-    if (authorizedMessage && authorizedMessage.message) {
-        setMessage(authorizedMessage.message);
-        setRenderMessage(true);
-
-        // Clear state from browser history so we do not see the message again on refresh
-        window.history.replaceState({}, document.title);
-    } else {
-        setMessage("");
-        setRenderMessage(false);
-    }
-    },[authorizedMessage])
-
-    const handleLogin = (e: { preventDefault: () => void; }) => {
-        e.preventDefault();
+    const handleRegister = (event) => {
+        event.preventDefault();
         setRenderMessage(false);
         setMessage("")
 
-        AuthService.login(formData.email, formData.password)
-        .then(() => navigate("/home"))
-        .catch((error: { response: { data: { message: any; }; }; message: any; toString: () => any; }) => {
+        AuthenticationService.register(formData.name, formData.email, formData.password)
+        .then(() => {setMessage("Account registration successful");
+        setRenderMessage(true);
+        setMessageSeverity("success")
+        })
+        .catch((error) => {
             const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString() 
             || "Login failed. Please try again.";
             setMessage(errorMessage);
             setRenderMessage(true);
-            console.log(error);
+            setMessageSeverity("warning");
         })
     };
 
-    const handleFormChange = (e: { target: { name: string; value: string; }; }) => {
-        setFormData({...formData, [e.target.name]: e.target.value});
+    const handleFormChange = (event) => {
+        setFormData({ ...formData, [event.target.name]: event.target.value });
         console.log(formData);
     }
 
@@ -53,8 +39,8 @@ function Login() {
             justifyContent: "center",
             alignItems: "center",
         }}>
-            <form onSubmit={handleLogin}>
-            <div className="Login">
+            <form onSubmit={handleRegister}>
+            <div className="Register">
                 <Box sx={{
                     width: 300,
                     padding: 4,
@@ -65,14 +51,23 @@ function Login() {
                     borderRadius: 2,
                     backgroundColor: "#fafafa",
                 }}>
-                    {renderMessage && (<Alert variant="filled" severity="warning"> {message} </Alert>)}
+                    {renderMessage && (<Alert variant="filled" severity={messageSeverity}> {message} </Alert>)}
                     <Typography variant="h3" align="center">
-                        Login
+                        Register
                     </Typography>
                     <TextField
-                        id ="filled-search"
-                        label ="Email"
-                        name = "email"
+                        id="filled-search"
+                        label="Name"
+                        name="name"
+                        type="search"
+                        variant="filled"
+                        onChange={handleFormChange}
+                        required
+                    />
+                    <TextField
+                        id="filled-search"
+                        label="Email"
+                        name="email"
                         type="search"
                         variant="filled"
                         onChange={handleFormChange}
@@ -80,7 +75,7 @@ function Login() {
                     />
                     <TextField
                         id="filled-password-input"
-                        name = "password"
+                        name="password"
                         label="Password"
                         type="password"
                         autoComplete="current-password"
@@ -89,9 +84,9 @@ function Login() {
                         required
                     />
                     <Button variant="contained" type = "submit">Submit</Button>
-                    <a href="/register">
+                    <a href="/">
                     <Typography variant="h6" align="center">
-                        Register
+                        Login
                     </Typography>
                     </a>
                 </Box>
@@ -101,4 +96,4 @@ function Login() {
     )
 }
 
-export default Login;
+export default Register;

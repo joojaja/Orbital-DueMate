@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import AuthService from "../services/authService";
+import AuthService from "../services/authenticationService";
 
 // This component is used to protect routes that require authentication
 const ProtectedRoute = () => {
