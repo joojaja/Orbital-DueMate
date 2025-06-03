@@ -4,7 +4,7 @@ import axios from 'axios';
 // like login, logout, registration, and fetching the current user.
 const API_URL = 'http://localhost:8081/api/auth/';
 
-class AuthService {
+class AuthenticationService {
   login(email, password) {
     return axios
       .post(API_URL + 'signin', {
@@ -35,4 +35,4 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+export default new AuthenticationService();
