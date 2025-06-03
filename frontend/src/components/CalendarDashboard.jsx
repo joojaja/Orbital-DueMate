@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../styles/CalendarDashboard.css";
 import AuthService from "../services/authService";
 import { Button } from "@mui/material";
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const sidebarItems = [
     { tabName: "Calendar", active: true },

@@ -1,6 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, Link, useNavigate, Navigate, Outlet} from "react-router-dom";
-import { Button, TextField, Box, Typography, Alert } from "@mui/material";
-import { useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import AuthService from "../services/authService";
 
 // This component is used to protect routes that require authentication
