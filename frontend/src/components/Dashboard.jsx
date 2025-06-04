@@ -2,7 +2,6 @@ import "../styles/Dashboard.css";
 import AuthService from "../services/authenticationService";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Calendar from '../components/calendar';
 
 const sidebarItems = [
     { tabName: "Calendar", active: true },
@@ -12,7 +11,7 @@ const sidebarItems = [
     { tabName: "Friends", active: false },
 ];
 
-export default function Dashboard() {
+export default function Dashboard(props) {
 
     const token = AuthService.getCurrentUser();
 
@@ -69,7 +68,7 @@ export default function Dashboard() {
 
                     {/* Main Content */}
                     <div class="main-content">
-                        <Calendar />
+                        {props.component}
                     </div>
 
                 </div>
