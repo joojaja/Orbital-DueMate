@@ -74,7 +74,9 @@ export default function Calendar() {
                     <span className="calendar-month">{monthNames[month]}</span>
                     <button className="calendar-arrow-btn" onClick={nextMonth}>&gt;</button>
                 </div>
-                <div className="calendar-header-action" onClick={goToToday}>TODAY</div>
+                <div className="today" onClick={goToToday}>
+                    <span>TODAY</span>
+                </div>
             </div>
             <div className="calendar-grid-container">
                 <table className="calendar-table">
