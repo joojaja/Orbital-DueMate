@@ -6,16 +6,17 @@ const API_URL = 'http://localhost:8081/api/auth/';
 
 class AuthenticationService {
   login(email, password) {
-    return axios
-      .post(API_URL + 'signin', {
-        email,
-        password
-      }).then(response => {
-        if (response.data.token) {
-          localStorage.setItem('user', JSON.stringify(response.data));
-        }
-        return response.data;
-      });
+    return axios.post(API_URL + 'signin', {
+      email,
+      password
+    }).then(response => {
+      if (response.data.token) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+      }
+      return response.data;
+    }).catch(error => {
+      console.log("Error happened during login: " + error)
+    });
   }
 
   logout() {
@@ -27,6 +28,8 @@ class AuthenticationService {
       name,
       email,
       password
+    }).catch(error => {
+      console.log("Error happened during register: " + error)
     });
   }
 
