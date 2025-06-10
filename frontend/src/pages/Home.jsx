@@ -1,9 +1,9 @@
-import Calendar from "../components/calendar";
+import CalendarCRUD from "../components/CalendarCRUD";
 import Dashboard from "../components/Dashboard";
 
 function Home() {
     return (
-        <Dashboard component={<Calendar />} />
+        <Dashboard component={<CalendarCRUD />} />
     );
 }
 

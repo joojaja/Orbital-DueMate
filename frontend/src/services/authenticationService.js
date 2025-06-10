@@ -2,21 +2,21 @@ import axios from 'axios';
 
 // This file contains the AuthService class which handles authentication-related operations
 // like login, logout, registration, and fetching the current user.
-const API_URL = 'http://localhost:8081/api/auth/';
+const apiURL = 'http://localhost:8081/api/auth/';
 
 class AuthenticationService {
   login(email, password) {
-    return axios.post(API_URL + 'signin', {
+    return axios.post(apiURL + 'signin', {
       email,
       password
-    }).then(response => {
+    })
+    .then(response => {
       if (response.data.token) {
         localStorage.setItem('user', JSON.stringify(response.data));
       }
       return response.data;
-    }).catch(error => {
-      console.log("Error happened during login: " + error)
-    });
+    })
+    .catch(error => {console.log("Error happened during login: " + error)});
   }
 
   logout() {
@@ -24,13 +24,12 @@ class AuthenticationService {
   }
 
   register(name, email, password) {
-    return axios.post(API_URL + 'signup', {
+    return axios.post(apiURL + 'signup', {
       name,
       email,
       password
-    }).catch(error => {
-      console.log("Error happened during register: " + error)
-    });
+    })
+    .catch(error => {console.log("Error happened during register: " + error)});
   }
 
   getCurrentUser() {
