@@ -14,8 +14,6 @@ import com.example.models.*;
 import com.example.entities.*;
 // import java.util.Date;
 
-// Setup CORS
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 // Set mapping
 @RequestMapping("/api/auth")
