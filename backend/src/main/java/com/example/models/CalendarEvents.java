@@ -36,8 +36,14 @@ public class CalendarEvents {
     @Column(nullable = false)
     private Instant dateTime;
 
+    @Column
+    private Instant endTime;
+
     @Column(nullable = false)
     private  Boolean allDay;
+    
+    @Column
+    private String description;
 
     // Foreign key to user table
     // We must pass a User object so that the Object Relational Mapping (ORM) works
@@ -45,6 +51,10 @@ public class CalendarEvents {
     @ManyToOne
     @JoinColumn(name = "fk_user_id",nullable = false)
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "fk_edited_by_user_id",nullable = false)
+    private User editedUser;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreatedDate
@@ -56,11 +66,14 @@ public class CalendarEvents {
 
     public CalendarEvents() {};
 
-    public CalendarEvents(String name, Instant dateTime, Boolean allDay, User user) {
+    public CalendarEvents(String name, Instant dateTime, Instant endTime, Boolean allDay, String description, User user, User editedUser) {
         this.name = name;
         this.dateTime = dateTime;
+        this.endTime = endTime;
         this.allDay = allDay;
+        this.description = description;
         this.user = user;
+        this.editedUser = editedUser;
     }
     
     // Update createdAt and updatedAt when creating a new event

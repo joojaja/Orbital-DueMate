@@ -28,8 +28,11 @@ public class CalendarController {
                 event.getId(),
                 event.getName(),
                 event.getDateTime(),
+                event.getEndTime(),
                 event.getAllDay(),
+                event.getDescription(),
                 event.getUser().getId(), // Get only the user ID
+                event.getEditedUser().getName(),
                 event.getCreatedAt(),
                 event.getUpdatedAt()
             )).toList();
@@ -45,8 +48,8 @@ public class CalendarController {
         try {
             // Create new calendar event
             User user = userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
-            CalendarEvents calendarEvents = new CalendarEvents(calendarEventJSON.getName(), calendarEventJSON.getDateTime(), 
-            calendarEventJSON.getAllDay(), user);
+            CalendarEvents calendarEvents = new CalendarEvents(calendarEventJSON.getName(), calendarEventJSON.getDateTime(), calendarEventJSON.getEndTime(),
+            calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, user);
             this.calendarEventsRepository.save(calendarEvents);
 
             // Return a success message
@@ -60,7 +63,9 @@ public class CalendarController {
     public ResponseEntity<?> updateCalendarEvent(@PathVariable Long id, @RequestBody CalendarEventJSON calendarEventJSON) {
         try {
             // Update calendar event
-            this.calendarEventsRepository.updateEventbyId(id, calendarEventJSON.getName(), calendarEventJSON.getDateTime(), calendarEventJSON.getAllDay());
+            User user = userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            this.calendarEventsRepository.updateEventbyId(id, calendarEventJSON.getName(), calendarEventJSON.getDateTime(), 
+            calendarEventJSON.getEndTime(), calendarEventJSON.getAllDay(), calendarEventJSON.getDescription(), user);
 
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event updated successfully!"));

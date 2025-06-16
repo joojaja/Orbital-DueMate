@@ -17,6 +17,9 @@ import lombok.Builder;
 public class CalendarEventJSON {
     private String name;
     private Instant dateTime;
+    private Instant endTime;
     private Boolean allDay;
+    private String description;
+    // private Long editedUserId; Dont need since user
     private Long userId;
 }
