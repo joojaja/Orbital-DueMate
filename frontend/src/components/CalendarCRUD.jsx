@@ -12,6 +12,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import Snackbar from '@mui/material/Snackbar';
 import interactionPlugin from '@fullcalendar/interaction';
 
 import "../styles/CalendarCRUD.css";
@@ -32,8 +33,8 @@ function CalendarCRUD() {
     const [openEditModal, setOpenEditModal] = useState(false);
 
     // State to hold form data for creating events
-    const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: ""});
-    const [editFormData, setEditFormData] = useState({ title: "", dateTime: "",endTime: null, description: "", editedBy: "",id: 0 });
+    const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: "" });
+    const [editFormData, setEditFormData] = useState({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
 
     // State to hold all day event that can be toggled
     const [createFormAllDay, setCreateFormAllDay] = useState(false);
@@ -45,6 +46,11 @@ function CalendarCRUD() {
 
     const [renderEditFormMessage, setRenderEditFormMessage] = useState(false);
     const [editFormMessage, setEditFormMessage] = useState("");
+
+    // States for snackbar
+    const [openSnackBar, setOpenSnackBar] = useState(false);
+    const [snackBarMessage, setSnackBarMessage] = useState("");
+
 
     // API URL for calendar events
     const apiURL = "http://localhost:8081";
@@ -60,7 +66,7 @@ function CalendarCRUD() {
                         start: event.dateTime,
                         end: event.endTime,
                         allDay: event.allDay,
-                        extendedProps : {
+                        extendedProps: {
                             description: event.description,
                             editedBy: event.editedBy,
                         }
@@ -72,11 +78,14 @@ function CalendarCRUD() {
             .catch(error => { console.log("Error happened during login: " + error) });
     }, [updateEvents, id, jwtToken]);
 
+    const handleSnackBarClose = () => {
+        setOpenSnackBar(false);
+    }
 
     const handleCloseCreateEventModal = () => {
         setCreateFormMessage("");
         setRenderCreateFormMessage(false);
-        setCreateFormData({ title: "", dateTime: "", endTime: null, description: ""});
+        setCreateFormData({ title: "", dateTime: "", endTime: null, description: "" });
         setCreateFormAllDay(false);
         setOpenCreateEventModal(false);
     }
@@ -84,7 +93,7 @@ function CalendarCRUD() {
     const handleCloseEditEventModal = () => {
         setEditFormMessage("");
         setRenderEditFormMessage(false);
-        setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0});
+        setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
         setEditFormAllDay(false);
         setOpenEditModal(false);
     };
@@ -107,58 +116,44 @@ function CalendarCRUD() {
         if (event && event.target) {
             setCreateFormData({ ...createFormData, [event.target.name]: event.target.value });
         }
-        // } else if (event) { // DateTimePicker does not have target property
-        //     const dateOrDateTime = createFormAllDay ?
-        //         dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-        //         : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
-
-        //     setCreateFormData({ ...createFormData, dateTime: dateOrDateTime });
-        // }
     }
 
     const handleCreateFormDateTimeChange = (event) => {
         const dateOrDateTime = createFormAllDay ?
-                dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-                : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
+            dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
+            : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
 
-            setCreateFormData({ ...createFormData, dateTime: dateOrDateTime });
+        setCreateFormData({ ...createFormData, dateTime: dateOrDateTime });
     }
 
     const handleCreateFormEndTimeChange = (event) => {
         const dateOrDateTime = createFormAllDay ?
-                dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-                : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
+            dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
+            : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
 
-            setCreateFormData({ ...createFormData, endTime: dateOrDateTime });
+        setCreateFormData({ ...createFormData, endTime: dateOrDateTime });
     }
 
     const handleEditFormChange = (event) => {
         if (event && event.target) {
             setEditFormData({ ...editFormData, [event.target.name]: event.target.value });
         }
-        // } else if (event) { // DateTimePicker does not have target property
-        //     const dateOrDateTime = editFormAllDay ?
-        //         dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-        //         : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
-
-        //     setEditFormData({ ...editFormData, dateTime: dateOrDateTime });
-        // }
     }
 
     const handleEditFormDateTimeChange = (event) => {
         const dateOrDateTime = editFormAllDay ?
-                dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-                : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
+            dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
+            : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
 
-            setEditFormData({ ...editFormData, dateTime: dateOrDateTime });
+        setEditFormData({ ...editFormData, dateTime: dateOrDateTime });
     }
 
     const handleEditFormEndTimeChange = (event) => {
         const dateOrDateTime = editFormAllDay ?
-                dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
-                : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
+            dayjs(event).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ") //Set time to midnight since Java instant needs a time
+            : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
 
-            setEditFormData({ ...editFormData, endTime: dateOrDateTime });
+        setEditFormData({ ...editFormData, endTime: dateOrDateTime });
     }
 
     const handleAddEventSubmit = (event) => {
@@ -181,10 +176,14 @@ function CalendarCRUD() {
                     console.log(response.data.message);
                     setCreateFormMessage("");
                     setRenderCreateFormMessage(false);
-                    setCreateFormData({ title: "", dateTime: "", endTime: null, description: ""});
+
+                    setCreateFormData({ title: "", dateTime: "", endTime: null, description: "" });
                     setCreateFormAllDay(false);
                     setUpdateEvents(!updateEvents); // To tell useEffect to fetch events again
                     setOpenCreateEventModal(false);
+
+                    setSnackBarMessage("Event successfully created");
+                    setOpenSnackBar(true);
                 })
                 .catch(error => { console.log("Error happened during login: " + error) });
         }
@@ -210,22 +209,25 @@ function CalendarCRUD() {
                     console.log(response.data.message);
                     setEditFormMessage("");
                     setRenderEditFormMessage(false);
-                    setEditFormData({ title: "", dateTime: "",endTime: null, description: "", editedBy: "", id: 0 });
+
+                    setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
                     setEditFormAllDay(false);
                     setUpdateEvents(!updateEvents); // To tell useEffect to fetch events again
                     setOpenEditModal(false);
+
+                    setSnackBarMessage("Event successfully edited");
+                    setOpenSnackBar(true);
                 })
                 .catch(error => { console.log("Error happened during editing event: " + error) });
         }
     }
-    
-    // const [editFormData, setEditFormData] = useState({ title: "", dateTime: "",endTime: null, description: "", id: 0 });
+
     const handleDateClick = (info) => {
         const dateTime = new Date(info.event.start);
         const formattedDateTime = editFormAllDay ? dayjs(dateTime).startOf('day').format("YYYY-MM-DDTHH:mm:ssZ")
             : dayjs(dateTime).format("YYYY-MM-DDTHH:mm:ssZ");
-        
-        
+
+
         let formattedEndTime = null;
         if (info.event.end) {
             const endTime = new Date(info.event.end);
@@ -233,8 +235,10 @@ function CalendarCRUD() {
                 : dayjs(endTime).format("YYYY-MM-DDTHH:mm:ssZ");
         }
 
-        setEditFormData({ ...editFormData, title: info.event.title, dateTime: formattedDateTime, endTime: formattedEndTime, 
-            description: info.event.extendedProps.description, editedBy: info.event.extendedProps.editedBy, id: info.event.id });
+        setEditFormData({
+            ...editFormData, title: info.event.title, dateTime: formattedDateTime, endTime: formattedEndTime,
+            description: info.event.extendedProps.description, editedBy: info.event.extendedProps.editedBy, id: info.event.id
+        });
 
         setEditFormAllDay(info.event.allDay)
         setOpenEditModal(true);
@@ -247,16 +251,27 @@ function CalendarCRUD() {
                 console.log(response.data.message);
                 setEditFormMessage("");
                 setRenderEditFormMessage(false);
-                setEditFormData({ title: "", dateTime: "",endTime: null, description: "", editedBy: "", id: 0 });
+
+                setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
                 setEditFormAllDay(false);
                 setUpdateEvents(!updateEvents); // To tell useEffect to fetch events again
                 setOpenEditModal(false);
+
+                setSnackBarMessage("Event successfully deleted");
+                setOpenSnackBar(true);
             })
             .catch(error => { console.log("Error happened during deleting event: " + error) });
     }
 
     return (
         <div>
+            <Snackbar
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                open={openSnackBar}
+                onClose={handleSnackBarClose}
+                message={snackBarMessage}
+                autoHideDuration={3000}
+            />
             {/* Modal for creating events */}
             <Modal
                 open={openCreateEventModal}
@@ -302,35 +317,35 @@ function CalendarCRUD() {
                                         <FormControlLabel control={<Switch onChange={toggleCreateFormAllDay} />} label="All day event?" />
                                     </FormGroup>
                                     {renderCreateFormMessage && (<Alert variant="filled" severity="warning"> {createFormMessage} </Alert>)}
-                                    
+
                                     <Box>
-                                    <Typography> Start </Typography>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        {createFormAllDay ?
-                                            <DatePicker
-                                                onChange={handleCreateFormDateTimeChange}
-                                                required /> :
-                                            <DateTimePicker
-                                                onChange={handleCreateFormDateTimeChange}
-                                                required
-                                            />
-                                        }
-                                    </LocalizationProvider>
+                                        <Typography> Start </Typography>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            {createFormAllDay ?
+                                                <DatePicker
+                                                    onChange={handleCreateFormDateTimeChange}
+                                                    required /> :
+                                                <DateTimePicker
+                                                    onChange={handleCreateFormDateTimeChange}
+                                                    required
+                                                />
+                                            }
+                                        </LocalizationProvider>
                                     </Box>
-                                    
+
                                     <Box>
-                                    <Typography> End </Typography>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        {createFormAllDay ?
-                                            <DatePicker
-                                                onChange={handleCreateFormEndTimeChange}
-                                                required /> :
-                                            <DateTimePicker
-                                                onChange={handleCreateFormEndTimeChange}
-                                                required
-                                            />
-                                        }
-                                    </LocalizationProvider>
+                                        <Typography> End </Typography>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            {createFormAllDay ?
+                                                <DatePicker
+                                                    onChange={handleCreateFormEndTimeChange}
+                                                    required /> :
+                                                <DateTimePicker
+                                                    onChange={handleCreateFormEndTimeChange}
+                                                    required
+                                                />
+                                            }
+                                        </LocalizationProvider>
                                     </Box>
 
                                     <TextField
@@ -402,38 +417,38 @@ function CalendarCRUD() {
                                     {renderEditFormMessage && (<Alert variant="filled" severity="warning"> {editFormMessage} </Alert>)}
 
                                     <Box>
-                                    <Typography> Start </Typography>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        {editFormAllDay ?
-                                            <DatePicker
-                                                onChange={handleEditFormDateTimeChange}
-                                                defaultValue={editFormData.dateTime ? dayjs(editFormData.dateTime) : null}
-                                                required /> :
-                                            <DateTimePicker
-                                                onChange={handleEditFormDateTimeChange}
-                                                defaultValue={editFormData.dateTime ? dayjs(editFormData.dateTime) : null}
-                                                required
-                                            />
-                                        }
-                                    </LocalizationProvider>
+                                        <Typography> Start </Typography>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            {editFormAllDay ?
+                                                <DatePicker
+                                                    onChange={handleEditFormDateTimeChange}
+                                                    defaultValue={editFormData.dateTime ? dayjs(editFormData.dateTime) : null}
+                                                    required /> :
+                                                <DateTimePicker
+                                                    onChange={handleEditFormDateTimeChange}
+                                                    defaultValue={editFormData.dateTime ? dayjs(editFormData.dateTime) : null}
+                                                    required
+                                                />
+                                            }
+                                        </LocalizationProvider>
                                     </Box>
 
                                     <Box>
-                                    <Typography> End </Typography>
-                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        {editFormAllDay ?
-                                            <DatePicker
-                                                onChange={handleEditFormEndTimeChange}
-                                                defaultValue={editFormData.endTime ? dayjs(editFormData.dateTime) : null}
-                                            /> :
-                                            <DateTimePicker
-                                                onChange={handleEditFormEndTimeChange}
-                                                defaultValue={editFormData.endTime ? dayjs(editFormData.endTime) : null}
-                                            />
-                                        }
-                                    </LocalizationProvider>
+                                        <Typography> End </Typography>
+                                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                            {editFormAllDay ?
+                                                <DatePicker
+                                                    onChange={handleEditFormEndTimeChange}
+                                                    defaultValue={editFormData.endTime ? dayjs(editFormData.dateTime) : null}
+                                                /> :
+                                                <DateTimePicker
+                                                    onChange={handleEditFormEndTimeChange}
+                                                    defaultValue={editFormData.endTime ? dayjs(editFormData.endTime) : null}
+                                                />
+                                            }
+                                        </LocalizationProvider>
                                     </Box>
-                                    
+
                                     <TextField
                                         multiline
                                         label="Description"
