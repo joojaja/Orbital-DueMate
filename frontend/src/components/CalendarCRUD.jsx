@@ -7,13 +7,14 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list";
 import { useEffect, useState } from "react";
-import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert } from "@mui/material";
+import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid } from "@mui/material";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Snackbar from '@mui/material/Snackbar';
 import interactionPlugin from '@fullcalendar/interaction';
+import MailIcon from '@mui/icons-material/Mail';
 
 import "../styles/CalendarCRUD.css";
 
@@ -27,10 +28,13 @@ function CalendarCRUD() {
 
     // State that we toggle so that useEffect cann fetch events from backend again
     const [updateEvents, setUpdateEvents] = useState(false);
+    const [updateInvites, setUpdateInvites] = useState(false);
 
     // States for modals
     const [openCreateEventModal, setOpenCreateEventModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
+    const [openInviteNotiModal, setOpenInviteNotiModal] = useState(false);
+    const [openSendInviteModal, setOpenSendInviteModal] = useState(false);
 
     // State to hold form data for creating events
     const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: "" });
@@ -50,6 +54,13 @@ function CalendarCRUD() {
     // States for snackbar
     const [openSnackBar, setOpenSnackBar] = useState(false);
     const [snackBarMessage, setSnackBarMessage] = useState("");
+
+    // States for invites
+    const [inviteCount, setInviteCount] = useState(0);
+    const [invites, setInvites] = useState([]);
+
+    // State for sending invite
+    const [emailToInvite, setEmailToInvite] = useState("");
 
 
     // API URL for calendar events
@@ -78,6 +89,31 @@ function CalendarCRUD() {
             .catch(error => { console.log("Error happened during login: " + error) });
     }, [updateEvents, id, jwtToken]);
 
+
+    // API call every minute to update notifications for invites
+    useEffect(() => {
+        const getNotifications = () => {
+            axios.get(apiURL + `/calendar/invite/read/${id}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
+                .then(response => {
+                    console.log(response.data);
+                    let count = response.data.count;
+                    let invites = response.data.invites;
+
+                    setInviteCount(count);
+                    setInvites(invites);
+                })
+                .catch(error => { console.log("Error happened during polling of invite notification: " + error) });
+        }
+
+        getNotifications();
+
+        // Poll every 30 seconds
+        const notifcationPollingInterval = setInterval(getNotifications, 30000);
+
+        // When dismounting we clear/stop the polling interval
+        return () => clearInterval(notifcationPollingInterval);
+    }, [updateInvites])
+
     const handleSnackBarClose = () => {
         setOpenSnackBar(false);
     }
@@ -96,6 +132,15 @@ function CalendarCRUD() {
         setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
         setEditFormAllDay(false);
         setOpenEditModal(false);
+    };
+
+    const handleCloseInviteNotiModal = () => {
+        setOpenInviteNotiModal(false);
+    };
+
+    const handleCloseSendInviteModal = () => {
+        setEmailToInvite("");
+        setOpenSendInviteModal(false);
     };
 
 
@@ -154,6 +199,12 @@ function CalendarCRUD() {
             : dayjs(event).format("YYYY-MM-DDTHH:mm:ssZ");
 
         setEditFormData({ ...editFormData, endTime: dateOrDateTime });
+    }
+
+    const handleInviteChange = (event) => {
+        if (event && event.target) {
+            setEmailToInvite(event.target.value);
+        }
     }
 
     const handleAddEventSubmit = (event) => {
@@ -248,7 +299,6 @@ function CalendarCRUD() {
         axios.delete(apiURL + "/calendar/delete/" + editFormData.id,
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
-                console.log(response.data.message);
                 setEditFormMessage("");
                 setRenderEditFormMessage(false);
 
@@ -263,6 +313,60 @@ function CalendarCRUD() {
             .catch(error => { console.log("Error happened during deleting event: " + error) });
     }
 
+    const handleInviteButtonClick = () => {
+        setOpenSendInviteModal(true);
+    }
+
+    const handleSendInviteSubmit = (event) => {
+        event.preventDefault();
+        axios.post(apiURL + "/calendar/invite/create",
+            {
+                email: emailToInvite,
+                userId: id
+            },
+            { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                setEmailToInvite("");
+                setOpenSendInviteModal(false);
+
+                setSnackBarMessage("Invite successfully sent");
+                setOpenSnackBar(true);
+            })
+            .catch(error => {
+                console.log(error);
+                setSnackBarMessage(error.response.data.message);
+                setOpenSnackBar(true);
+            });
+    }
+
+
+    const handleAcceptInvite = (entryId) => {
+        console.log(id);
+        axios.put(apiURL + "/calendar/invite/accept/" + entryId, {},
+            { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                setUpdateInvites(!updateInvites)
+                setSnackBarMessage("Invite successfully accepted");
+                setOpenSnackBar(true);
+            })
+            .catch(error => { console.log("Error happened during accepting invite: " + error) });
+    }
+
+    const handleRejectInvite = (entryId) => {
+        axios.put(apiURL + "/calendar/invite/reject/" + entryId, {},
+            { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                setUpdateInvites(!updateInvites)
+                setSnackBarMessage("Invite successfully rejected");
+                setOpenSnackBar(true);
+            })
+            .catch(error => { console.log("Error happened during accepting invite: " + error) });
+    }
+
+    const handleNotifIconClick = () => {
+        setOpenInviteNotiModal(true);
+    }
+
     return (
         <div>
             <Snackbar
@@ -272,6 +376,129 @@ function CalendarCRUD() {
                 message={snackBarMessage}
                 autoHideDuration={3000}
             />
+
+            {/* Notifications and invite button*/}
+            <Box sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                gap: 2,
+                p: 2,
+            }}>
+                <Badge badgeContent={inviteCount} color="success">
+                    <IconButton onClick={handleNotifIconClick}>
+                        <MailIcon fontSize="large" color="action" />
+                    </IconButton>
+                </Badge>
+                <Button variant="contained" sx={{}} onClick={handleInviteButtonClick}>Invite</Button>
+            </Box>
+
+            {/* Modal for sending invites */}
+            <Modal
+                open={openSendInviteModal}
+                onClose={handleCloseSendInviteModal}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={{
+                    position: "absolute",
+                    // width: "45%",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    bgcolor: "background.paper",
+                    border: "2px solid #000",
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    <form onSubmit={handleSendInviteSubmit}>
+                        <div className="checkInvite">
+                            <Box sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}>
+                                <Box sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 7,
+                                    p: 4
+                                    // width: "100%",
+                                }}>
+
+                                    <Box>
+                                        {/* <Typography> Email of user: </Typography> */}
+                                        <TextField
+                                            id="filled-search"
+                                            label="Email of user"
+                                            name="email"
+                                            type="search"
+                                            variant="filled"
+                                            onChange={handleInviteChange}
+                                            required
+                                        />
+                                    </Box>
+                                    <Button variant="contained" type="submit" sx={{ width: "80%" }}>Send Invite</Button>
+                                </Box>
+                            </Box>
+                        </div>
+                    </form>
+                </Box>
+            </Modal>
+
+            {/* Modal for checking notification invites */}
+            <Modal
+                open={openInviteNotiModal}
+                onClose={handleCloseInviteNotiModal}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={{
+                    position: "absolute",
+                    // width: "45%",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    bgcolor: "background.paper",
+                    border: "2px solid #000",
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    {invites.map((inv, index) => ( // CalendarInviteID
+                        <Box key={index}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography>
+                                        Name: {inv.name}, Email: {inv.email}
+                                    </Typography>
+                                </Grid>
+
+                                <Grid item xs={4} container justifyContent="flex-end" spacing={2}>
+                                    <Grid item>
+                                        <Button
+                                            variant="outlined"
+                                            color="success"
+                                            onClick={() => handleAcceptInvite(inv.calendarInviteID)}
+                                        >
+                                            Accept
+                                        </Button>
+                                    </Grid>
+                                    <Grid item>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleRejectInvite(inv.calendarInviteID)}
+                                        >
+                                            Reject
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                </Box>
+            </Modal>
+
             {/* Modal for creating events */}
             <Modal
                 open={openCreateEventModal}

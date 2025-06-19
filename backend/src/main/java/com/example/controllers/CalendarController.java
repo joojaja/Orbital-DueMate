@@ -3,9 +3,13 @@ package com.example.controllers;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.repository.*;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import com.example.models.*;
 import com.example.entities.*;
 import java.util.List;
+
 
 @RestController
 // Set mapping
@@ -13,12 +17,15 @@ import java.util.List;
 public class CalendarController {
     private final CalendarEventsRepository calendarEventsRepository;
     private final UserRepository userRepository;
-    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository) {
+    private final CalendarInvitesRepository calendarInvitesRepository;
+
+    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository, CalendarInvitesRepository calendarInvitesRepository) {
         this.userRepository = userRepository;
         this.calendarEventsRepository = calendarEventsRepository;
+        this.calendarInvitesRepository = calendarInvitesRepository;
     }
 
-    @GetMapping("/calendar/read/{id}") // the endpoint for user register; /api/auth/signin
+    @GetMapping("/calendar/read/{id}")
     public ResponseEntity<?> getCalendarEvents(@PathVariable Long id) {
         try {
             // Create new calendar event
@@ -43,7 +50,7 @@ public class CalendarController {
         }
     }
 
-    @PostMapping("/calendar/create") // the endpoint for user register; /api/auth/signin
+    @PostMapping("/calendar/create") 
     public ResponseEntity<?> createNewCalendarEvent(@RequestBody CalendarEventJSON calendarEventJSON) {
         try {
             // Create new calendar event
@@ -84,6 +91,88 @@ public class CalendarController {
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event deleted successfully!"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event deletion: " + e));
+        }
+    }
+
+    @PostMapping("/calendar/invite/create") 
+    public ResponseEntity<?> createNewCalendarInvite(@RequestBody CalendarInvitesJSON calendarInvitesJSON) {
+        try {
+            // Create new calendar event
+            User userToBeInvited = userRepository.findByEmail(calendarInvitesJSON.getEmail()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User invitingUser = userRepository.findById(calendarInvitesJSON.getUserId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+            // Check if user is inviting themself
+            if (userToBeInvited.equals(invitingUser)) {
+                throw new IllegalStateException("You cannot invite yourself");
+            }
+
+            // Check if invite already exists
+            if(calendarInvitesRepository.checkIfInviteExists(userToBeInvited, invitingUser).isPresent()) {
+                throw new IllegalStateException("Invite already exists!");
+            }
+
+
+            
+            CalendarInvites calendarInvite = new CalendarInvites("pending", userToBeInvited, invitingUser);
+
+            this.calendarInvitesRepository.save(calendarInvite);
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite created successfully!"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body(new MessageResponseJSON(e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(new MessageResponseJSON(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event creation: " + e));
+        }
+    }
+
+    @GetMapping("/calendar/invite/read/{id}")
+    public ResponseEntity<?> getCalendarInvite(@PathVariable Long id) {
+        try {
+            // Create new calendar event
+            User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            List<CalendarInvitedDTO> users =  this.userRepository.findPendingInvitesByUser(user);
+            List<GetCalendarInvitesDTO> invites = users.stream().map(u -> new GetCalendarInvitesDTO(u.getUser().getId(), u.getUser().getName(), u.getUser().getEmail(), u.getCalendarInviteID())).toList();
+            GetCalendarInvitesWithCountDTO inviteWithCount = new GetCalendarInvitesWithCountDTO(invites.size(), invites);
+            return ResponseEntity.status(200).body(inviteWithCount);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the user's calendar invites: " + e));
+        }
+    }
+
+    @GetMapping("/calendar/acceptedinvites/read/{id}")
+    public ResponseEntity<?> getAcceptedCalendarInvite(@PathVariable Long id) {
+        try {
+            // Create new calendar event
+            User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            List<User> users =  this.userRepository.findAcceptedInvitesByUser(user);
+            List<AcceptedCalendarInviteJSON> invites = users.stream().map(u -> new AcceptedCalendarInviteJSON(u.getId(), u.getName(), u.getEmail())).toList();
+            return ResponseEntity.status(200).body(invites);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the user's calendar events: " + e));
+        }
+    }
+
+    @PutMapping("/calendar/invite/accept/{id}")
+    public ResponseEntity<?> acceptCalendarInvite(@PathVariable Long id) {
+        try {     
+            this.calendarInvitesRepository.updateEventbyId(id, "accepted");
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite accepted successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event update: " + e));
+        }
+    }
+
+    @PutMapping("/calendar/invite/reject/{id}")
+    public ResponseEntity<?> rejectCalendarInvite(@PathVariable Long id) {
+        try {     
+            this.calendarInvitesRepository.updateEventbyId(id, "reject");
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite rejected successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event update: " + e));
         }
     }
 }
