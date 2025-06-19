@@ -22,4 +22,5 @@ public class CalendarEventJSON {
     private String description;
     // private Long editedUserId; Dont need since user
     private Long userId;
+    private Long createdByUserId;
 }

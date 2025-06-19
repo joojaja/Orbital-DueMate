@@ -22,4 +22,9 @@ public interface CalendarInvitesRepository extends JpaRepository<CalendarInvites
     @Transactional // DB transaction
     @Query("SELECT c FROM CalendarInvites c where c.user = :user AND c.invitedByUser = :invitedUser AND c.status = 'pending'")
     Optional<CalendarInvites> checkIfInviteExists(@Param("user") User user, @Param("invitedUser") User invitedUser); // @Param binds method params to query params
+
+    // To check if user accepted invite already
+    @Transactional // DB transaction
+    @Query("SELECT c FROM CalendarInvites c where c.user = :user AND c.invitedByUser = :invitedUser AND c.status = 'accepted'")
+    Optional<CalendarInvites> checkIfInviteAccepted(@Param("user") User user, @Param("invitedUser") User invitedUser); // @Param binds method params to query params
 }

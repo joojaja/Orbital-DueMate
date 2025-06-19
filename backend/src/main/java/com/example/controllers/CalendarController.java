@@ -55,8 +55,9 @@ public class CalendarController {
         try {
             // Create new calendar event
             User user = userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            User editingUser = userRepository.findById(calendarEventJSON.getCreatedByUserId()).orElseThrow(() -> new Exception("User not found"));
             CalendarEvents calendarEvents = new CalendarEvents(calendarEventJSON.getName(), calendarEventJSON.getDateTime(), calendarEventJSON.getEndTime(),
-            calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, user);
+            calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, editingUser);
             this.calendarEventsRepository.save(calendarEvents);
 
             // Return a success message
@@ -111,6 +112,10 @@ public class CalendarController {
                 throw new IllegalStateException("Invite already exists!");
             }
 
+            // Check if user already accepted invite
+            if(calendarInvitesRepository.checkIfInviteAccepted(userToBeInvited, invitingUser).isPresent()) {
+                throw new IllegalStateException("Invite already accepted by user!");
+            }
 
             
             CalendarInvites calendarInvite = new CalendarInvites("pending", userToBeInvited, invitingUser);

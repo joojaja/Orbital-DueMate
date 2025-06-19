@@ -7,7 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list";
 import { useEffect, useState } from "react";
-import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid } from "@mui/material";
+import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid, InputLabel, MenuItem, FormControl, Select} from "@mui/material";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -17,11 +17,19 @@ import interactionPlugin from '@fullcalendar/interaction';
 import MailIcon from '@mui/icons-material/Mail';
 
 import "../styles/CalendarCRUD.css";
+import { Navigate } from "react-router-dom";
 
+// WORK ON API CALL TO GET CALENDAR YOU ACCEPTED MAP ID AND NAME. 
+// Can add something to toggle in mounting for events to update after onChange for select
 function CalendarCRUD() {
     const token = authenticationService.getCurrentUser();
-    const id = token.id;
+    const currUserId = token.id;
+    const currUserName = token.name;
+
     const jwtToken = token.token;
+
+    // State for id of current user's calendar
+    const [currCalendarUserId, setCurrCalendarUserId] = useState(token.id);
 
     // State for calendar events
     const [events, setEvents] = useState([]);
@@ -29,6 +37,7 @@ function CalendarCRUD() {
     // State that we toggle so that useEffect cann fetch events from backend again
     const [updateEvents, setUpdateEvents] = useState(false);
     const [updateInvites, setUpdateInvites] = useState(false);
+    const [updateAcceptedInvites, setUpdateAcceptedInvites] = useState(false);
 
     // States for modals
     const [openCreateEventModal, setOpenCreateEventModal] = useState(false);
@@ -62,15 +71,18 @@ function CalendarCRUD() {
     // State for sending invite
     const [emailToInvite, setEmailToInvite] = useState("");
 
+    // State for selecting calendar
+    const [currUserCalendar, setCurrUserCalendar] = useState(currUserId);
+    const [acceptedCalendars, setAcceptedCalendars] = useState([{id: currUserId, name: currUserName}]);
 
     // API URL for calendar events
     const apiURL = "http://localhost:8081";
 
     // API call to retrieve calendar events that is called during mount/dismount and when events are changed
     useEffect(() => {
-        axios.get(apiURL + `/calendar/read/${id}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
+        axios.get(apiURL + `/calendar/read/${currCalendarUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
-                let calendarEvents = response.data.map(event => {
+                const calendarEvents = response.data.map(event => {
                     return {
                         id: event.id,
                         title: event.name,
@@ -87,22 +99,31 @@ function CalendarCRUD() {
                 setEvents(calendarEvents);
             })
             .catch(error => { console.log("Error happened during login: " + error) });
-    }, [updateEvents, id, jwtToken]);
+    }, [updateEvents, currCalendarUserId, jwtToken]);
 
 
     // API call every minute to update notifications for invites
     useEffect(() => {
-        const getNotifications = () => {
-            axios.get(apiURL + `/calendar/invite/read/${id}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
-                .then(response => {
-                    console.log(response.data);
-                    let count = response.data.count;
-                    let invites = response.data.invites;
+        let dismounted = false;
 
-                    setInviteCount(count);
-                    setInvites(invites);
+        const getNotifications = () => {
+            axios.get(apiURL + `/calendar/invite/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
+                .then(response => {
+                    // Prevent updating of states when dismounting to avoid getting concurrent error from React
+                    if (!dismounted) {
+                        let count = response.data.count;
+                        let invites = response.data.invites;
+
+                        setInviteCount(count);
+                        setInvites(invites);
+                    }
                 })
-                .catch(error => { console.log("Error happened during polling of invite notification: " + error) });
+                .catch(error => {
+                    // Prevent updating of states when dismounting to avoid getting concurrent error from React
+                    if (!dismounted) {
+                        console.log("Error happened during polling of invite notification: " + error);
+                    }
+                });
         }
 
         getNotifications();
@@ -111,8 +132,30 @@ function CalendarCRUD() {
         const notifcationPollingInterval = setInterval(getNotifications, 30000);
 
         // When dismounting we clear/stop the polling interval
-        return () => clearInterval(notifcationPollingInterval);
-    }, [updateInvites])
+        return () => {
+            dismounted = true;
+            clearInterval(notifcationPollingInterval);
+        }
+    }, [updateInvites]);
+
+    // API call to get accepted invites
+    useEffect(() => {
+        axios.get(apiURL + `/calendar/acceptedinvites/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                const calendarInvitesAccepted = response.data.map(event => {
+                    return {
+                        id: event.id,
+                        name: event.name
+                    }
+                });
+                
+                const currCalendar = acceptedCalendars.length > 0 ? [acceptedCalendars[0]]: [];
+                const newCalendars = currCalendar.concat(calendarInvitesAccepted);
+                setAcceptedCalendars(newCalendars);
+            })
+            .catch(error => { console.log("Error happened during loading accepted calendar invites: " + error) });
+    }, [currUserId, jwtToken, updateAcceptedInvites]);
+
 
     const handleSnackBarClose = () => {
         setOpenSnackBar(false);
@@ -220,7 +263,8 @@ function CalendarCRUD() {
                     endTime: createFormData.endTime,
                     allDay: createFormAllDay,
                     description: createFormData.description,
-                    userId: id
+                    userId: currCalendarUserId,
+                    createdByUserId: currUserId
                 },
                 { headers: { "Authorization": `Bearer ${jwtToken}` } })
                 .then(response => {
@@ -253,7 +297,7 @@ function CalendarCRUD() {
                     endTime: editFormData.endTime,
                     allDay: editFormAllDay,
                     description: editFormData.description,
-                    userId: id
+                    userId: currUserId
                 },
                 { headers: { "Authorization": `Bearer ${jwtToken}` } })
                 .then(response => {
@@ -322,7 +366,7 @@ function CalendarCRUD() {
         axios.post(apiURL + "/calendar/invite/create",
             {
                 email: emailToInvite,
-                userId: id
+                userId: currUserId
             },
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
@@ -341,13 +385,13 @@ function CalendarCRUD() {
 
 
     const handleAcceptInvite = (entryId) => {
-        console.log(id);
         axios.put(apiURL + "/calendar/invite/accept/" + entryId, {},
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 setUpdateInvites(!updateInvites)
                 setSnackBarMessage("Invite successfully accepted");
                 setOpenSnackBar(true);
+                setUpdateAcceptedInvites(!updateAcceptedInvites);
             })
             .catch(error => { console.log("Error happened during accepting invite: " + error) });
     }
@@ -367,6 +411,11 @@ function CalendarCRUD() {
         setOpenInviteNotiModal(true);
     }
 
+    const handleSelectCalendar = (event) => {
+        setCurrUserCalendar(event.target.value);
+        setCurrCalendarUserId(event.target.value);
+    }
+
     return (
         <div>
             <Snackbar
@@ -378,21 +427,44 @@ function CalendarCRUD() {
             />
 
             {/* Notifications and invite button*/}
-            <Box sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: 2,
-                p: 2,
-            }}>
-                <Badge badgeContent={inviteCount} color="success">
-                    <IconButton onClick={handleNotifIconClick}>
-                        <MailIcon fontSize="large" color="action" />
-                    </IconButton>
-                </Badge>
-                <Button variant="contained" sx={{}} onClick={handleInviteButtonClick}>Invite</Button>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    p: 2,
+                }}
+            >
+                <FormControl sx={{ minWidth: 200}}>
+                    <InputLabel id="demo-simple-select-label"></InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={currUserCalendar}
+                        // label="Age"
+                        onChange={handleSelectCalendar}
+                    >
+                    {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
+                        {/* <MenuItem value={10}>Ten</MenuItem>
+                        <MenuItem value={20}>Twenty</MenuItem>
+                        <MenuItem value={30}>Thirty</MenuItem> */}
+                    </Select>
+                </FormControl>
+                <Box sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    gap: 2,
+                    p: 2,
+                }}>
+                    <Badge badgeContent={inviteCount} color="success">
+                        <IconButton onClick={handleNotifIconClick}>
+                            <MailIcon fontSize="large" color="action" />
+                        </IconButton>
+                    </Badge>
+                    <Button variant="contained" sx={{}} onClick={handleInviteButtonClick}>Invite</Button>
+                </Box>
             </Box>
-
             {/* Modal for sending invites */}
             <Modal
                 open={openSendInviteModal}
