@@ -27,6 +27,7 @@ function Login() {
 
     const handleLogin = (event) => {
         event.preventDefault();
+        console.log("Trying login")
         setRenderMessage(false);
         setMessage("")
 
@@ -43,7 +44,6 @@ function Login() {
 
     const handleFormChange = (event) => {
         setFormData({ ...formData, [event.target.name]: event.target.value });
-        console.log(formData);
     }
 
     return (

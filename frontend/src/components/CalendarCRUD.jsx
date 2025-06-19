@@ -7,7 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list";
 import { useEffect, useState } from "react";
-import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid, InputLabel, MenuItem, FormControl, Select} from "@mui/material";
+import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid, InputLabel, MenuItem, FormControl, Select } from "@mui/material";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -17,7 +17,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import MailIcon from '@mui/icons-material/Mail';
 
 import "../styles/CalendarCRUD.css";
-import { Navigate } from "react-router-dom";
 
 // WORK ON API CALL TO GET CALENDAR YOU ACCEPTED MAP ID AND NAME. 
 // Can add something to toggle in mounting for events to update after onChange for select
@@ -73,32 +72,44 @@ function CalendarCRUD() {
 
     // State for selecting calendar
     const [currUserCalendar, setCurrUserCalendar] = useState(currUserId);
-    const [acceptedCalendars, setAcceptedCalendars] = useState([{id: currUserId, name: currUserName}]);
+    const [acceptedCalendars, setAcceptedCalendars] = useState([{ id: currUserId, name: currUserName }]);
 
     // API URL for calendar events
     const apiURL = "http://localhost:8081";
 
     // API call to retrieve calendar events that is called during mount/dismount and when events are changed
     useEffect(() => {
+        let dismounted = false;
         axios.get(apiURL + `/calendar/read/${currCalendarUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
-                const calendarEvents = response.data.map(event => {
-                    return {
-                        id: event.id,
-                        title: event.name,
-                        start: event.dateTime,
-                        end: event.endTime,
-                        allDay: event.allDay,
-                        extendedProps: {
-                            description: event.description,
-                            editedBy: event.editedBy,
+                if (!dismounted) {
+                    const calendarEvents = response.data.map(event => {
+                        return {
+                            id: event.id,
+                            title: event.name,
+                            start: event.dateTime,
+                            end: event.endTime,
+                            allDay: event.allDay,
+                            extendedProps: {
+                                description: event.description,
+                                editedBy: event.editedBy,
+                            }
                         }
-                    }
-                });
+                    });
 
-                setEvents(calendarEvents);
+                    setEvents(calendarEvents);
+                }
             })
-            .catch(error => { console.log("Error happened during login: " + error) });
+            .catch(error => {
+                if (!dismounted) {
+                    console.log("Error happened during login: " + error)
+                }
+            });
+
+        // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
+        return () => {
+            dismounted = true;
+        }
     }, [updateEvents, currCalendarUserId, jwtToken]);
 
 
@@ -134,26 +145,39 @@ function CalendarCRUD() {
         // When dismounting we clear/stop the polling interval
         return () => {
             dismounted = true;
+            // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
             clearInterval(notifcationPollingInterval);
         }
     }, [updateInvites]);
 
     // API call to get accepted invites
     useEffect(() => {
+        let dismounted = false;
         axios.get(apiURL + `/calendar/acceptedinvites/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
-                const calendarInvitesAccepted = response.data.map(event => {
-                    return {
-                        id: event.id,
-                        name: event.name
-                    }
-                });
-                
-                const currCalendar = acceptedCalendars.length > 0 ? [acceptedCalendars[0]]: [];
-                const newCalendars = currCalendar.concat(calendarInvitesAccepted);
-                setAcceptedCalendars(newCalendars);
+                if (!dismounted) {
+                    const calendarInvitesAccepted = response.data.map(event => {
+                        return {
+                            id: event.id,
+                            name: event.name
+                        }
+                    });
+
+                    const currCalendar = acceptedCalendars.length > 0 ? [acceptedCalendars[0]] : [];
+                    const newCalendars = currCalendar.concat(calendarInvitesAccepted);
+                    setAcceptedCalendars(newCalendars);
+                }
             })
-            .catch(error => { console.log("Error happened during loading accepted calendar invites: " + error) });
+            .catch(error => {
+                if (!dismounted) {
+                    console.log("Error happened during loading accepted calendar invites: " + error)
+                }
+            });
+
+        // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
+        return () => {
+            dismounted = true;
+        }
     }, [currUserId, jwtToken, updateAcceptedInvites]);
 
 
@@ -435,7 +459,7 @@ function CalendarCRUD() {
                     p: 2,
                 }}
             >
-                <FormControl sx={{ minWidth: 200}}>
+                <FormControl sx={{ minWidth: 200 }}>
                     <InputLabel id="demo-simple-select-label"></InputLabel>
                     <Select
                         labelId="demo-simple-select-label"
@@ -444,7 +468,7 @@ function CalendarCRUD() {
                         // label="Age"
                         onChange={handleSelectCalendar}
                     >
-                    {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
+                        {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
                         {/* <MenuItem value={10}>Ten</MenuItem>
                         <MenuItem value={20}>Twenty</MenuItem>
                         <MenuItem value={30}>Thirty</MenuItem> */}

@@ -25,9 +25,10 @@ export default function Dashboard(props) {
     }
 
     const navigate = useNavigate();
+    
     const handleLogout = () => {
         AuthService.logout();
-        navigate("/");
+        navigate("/login");
     };
 
     return (
