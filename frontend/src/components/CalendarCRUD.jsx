@@ -354,6 +354,7 @@ function CalendarCRUD() {
                 : dayjs(endTime).format("YYYY-MM-DDTHH:mm:ssZ");
         }
 
+        console.log(info.event.start, info.event.end)
         setEditFormData({
             ...editFormData, title: info.event.title, dateTime: formattedDateTime, endTime: formattedEndTime,
             description: info.event.extendedProps.description, editedBy: info.event.extendedProps.editedBy, id: info.event.id
@@ -560,7 +561,8 @@ function CalendarCRUD() {
                     boxShadow: 24,
                     p: 4,
                 }}>
-                    {invites.map((inv, index) => ( // CalendarInviteID
+                    {/* Check if there is invites or not*/}
+                    {inviteCount > 1 ? invites.map((inv, index) => ( // CalendarInviteID
                         <Box key={index}>
                             <Grid container alignItems="center" spacing={2}>
                                 <Grid item xs={8}>
@@ -591,7 +593,7 @@ function CalendarCRUD() {
                                 </Grid>
                             </Grid>
                         </Box>
-                    ))}
+                    )) : <Typography variant="h3"> You do not have any invites</Typography>} 
                 </Box>
             </Modal>
 
@@ -762,7 +764,7 @@ function CalendarCRUD() {
                                             {editFormAllDay ?
                                                 <DatePicker
                                                     onChange={handleEditFormEndTimeChange}
-                                                    defaultValue={editFormData.endTime ? dayjs(editFormData.dateTime) : null}
+                                                    defaultValue={editFormData.endTime ? dayjs(editFormData.endTime) : null}
                                                 /> :
                                                 <DateTimePicker
                                                     onChange={handleEditFormEndTimeChange}
