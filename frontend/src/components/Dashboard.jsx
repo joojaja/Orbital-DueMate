@@ -1,34 +1,42 @@
+import React, { useState } from "react";
 import "../styles/Dashboard.css";
 import AuthService from "../services/authenticationService";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const sidebarItems = [
-    { tabName: "Calendar", active: true },
-    { tabName: "Tasks", active: false },
-    { tabName: "Grades", active: false },
-    { tabName: "Pomodoro", active: false },
-    { tabName: "Friends", active: false },
-];
+// Importing of other tabs
+import Tasks from "./tasks";
+import Calendar from "./CalendarCRUD";
+// import Grades from "./Grades";
+// import Friends from "./Friends";
 
-export default function Dashboard(props) {
+
+// Tab names
+const TAB_NAMES = ["Calendar", "Tasks", "Grades", "Friends"];
+
+// Map tab names to components
+const TAB_COMPONENTS = {
+    Calendar: <Calendar />,
+    Tasks: <Tasks />,
+    //Grades: <Grades />,
+    //Friends: <Friends />,
+};
+
+export default function Dashboard() {
 
     const token = AuthService.getCurrentUser();
 
     // Get the name of the user
-    let user = "";
-    if (token === null) {
-        // Should not happen, if u see this the protected route failed
-        user = "Guest";
-    } else {
-        user = AuthService.getCurrentUser().name;
-    }
+    const user = token ? token.name : "Guest";
 
     const navigate = useNavigate();
     const handleLogout = () => {
         AuthService.logout();
         navigate("/");
     };
+
+    // State for active tab
+    const [activeTab, setActiveTab] = useState("Calendar");
 
     return (
         <>
@@ -43,13 +51,13 @@ export default function Dashboard(props) {
                     </div>
                     {/* Sidebar Other tabs*/}
                     <div className="sidebar-tabs">
-                        {/* TODO: ADD LINK TO a */}
-                        {sidebarItems.map((item) => (
+                        {TAB_NAMES.map((tabName) => (
                             <a
-                                key={item.tabName}
-                                className={`new-tab ${item.active && "active"}`}
+                                key={tabName}
+                                className={`new-tab ${activeTab === tabName ? "active" : ""}`}
+                                onClick={() => setActiveTab(tabName)}
                             >
-                                {item.tabName}
+                            {tabName}
                             </a>
                         ))}
                     </div>
@@ -67,8 +75,8 @@ export default function Dashboard(props) {
                     </div>
 
                     {/* Main Content */}
-                    <div class="main-content">
-                        {props.component}
+                    <div className="main-content">
+                        {TAB_COMPONENTS[activeTab]}
                     </div>
 
                 </div>
