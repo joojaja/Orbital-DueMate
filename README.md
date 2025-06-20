@@ -4,6 +4,7 @@ Repository for Team DueMate's Orbital project
 
 ## How to set up and run front-end
 ---
+- Ensure that you nodejs installed
 
 ```bash
 cd frontend
@@ -14,6 +15,7 @@ npm start
 ## How to set up and run back-end
 ---
 - Ensure that you have Java 24 installed (```java --version```)
+- Ensure that you have installed Maven
 - Ensure you have PostgreSQL installed already
 - Create a database
 - Ensure that you have setup your user and password in PgAdmin4 already
