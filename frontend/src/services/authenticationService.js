@@ -22,6 +22,7 @@ class AuthenticationService {
   logout() {
     // localStorage.removeItem('user');
     localStorage.clear();
+    window.location.href = '/login';
   }
 
   register(name, email, password) {

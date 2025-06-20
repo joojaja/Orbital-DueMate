@@ -18,10 +18,10 @@ import MailIcon from '@mui/icons-material/Mail';
 
 import "../styles/CalendarCRUD.css";
 
-// WORK ON API CALL TO GET CALENDAR YOU ACCEPTED MAP ID AND NAME. 
 // Can add something to toggle in mounting for events to update after onChange for select
 function CalendarCRUD() {
     const token = authenticationService.getCurrentUser();
+
     const currUserId = token.id;
     const currUserName = token.name;
 
@@ -127,6 +127,8 @@ function CalendarCRUD() {
 
                         setInviteCount(count);
                         setInvites(invites);
+
+                        console.log(count, invites);
                     }
                 })
                 .catch(error => {
@@ -562,7 +564,7 @@ function CalendarCRUD() {
                     p: 4,
                 }}>
                     {/* Check if there is invites or not*/}
-                    {inviteCount > 1 ? invites.map((inv, index) => ( // CalendarInviteID
+                    {inviteCount >= 1 ? invites.map((inv, index) => ( // CalendarInviteID
                         <Box key={index}>
                             <Grid container alignItems="center" spacing={2}>
                                 <Grid item xs={8}>
@@ -593,7 +595,7 @@ function CalendarCRUD() {
                                 </Grid>
                             </Grid>
                         </Box>
-                    )) : <Typography variant="h3"> You do not have any invites</Typography>} 
+                    )) : <Typography variant="h3"> You do not have any invites</Typography>}
                 </Box>
             </Modal>
 
