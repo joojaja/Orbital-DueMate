@@ -19,9 +19,10 @@ public interface CalendarEventsRepository extends JpaRepository<CalendarEvents, 
     // To update a calendar event by its id
     @Modifying
     @Transactional // DB transaction
-    @Query("UPDATE CalendarEvents c SET c.name = :name, c.dateTime = :dateTime, c.allDay = :allDay WHERE c.id = :id")
+    @Query("UPDATE CalendarEvents c SET c.name = :name, c.dateTime = :dateTime, c.endTime = :endTime, c.allDay = :allDay, c.description = :description, c.editedUser = :editedUser WHERE c.id = :id")
     void updateEventbyId(@Param("id") Long id, @Param("name") String name, 
-    @Param("dateTime") Instant dateTime, @Param("allDay") Boolean allDay); // @Param binds method params to query params
+    @Param("dateTime") Instant dateTime, @Param("endTime") Instant endTime,
+    @Param("allDay") Boolean allDay, @Param("description") String description, @Param("editedUser") User editedUser); // @Param binds method params to query params
 
     // To delete a calendar event by its id
     @Modifying

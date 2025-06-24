@@ -16,11 +16,13 @@ class AuthenticationService {
       }
       return response.data;
     })
-    .catch(error => {console.log("Error happened during login: " + error)});
+    // .catch(error => {console.log("Error happened during login: " + error)});
   }
 
   logout() {
-    localStorage.removeItem('user');
+    // localStorage.removeItem('user');
+    localStorage.clear();
+    window.location.href = '/login';
   }
 
   register(name, email, password) {
@@ -29,7 +31,7 @@ class AuthenticationService {
       email,
       password
     })
-    .catch(error => {console.log("Error happened during register: " + error)});
+    // .catch(error => {console.log("Error happened during register: " + error)});
   }
 
   getCurrentUser() {
