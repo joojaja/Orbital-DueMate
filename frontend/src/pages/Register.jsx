@@ -29,7 +29,6 @@ function Register() {
 
     const handleFormChange = (event) => {
         setFormData({ ...formData, [event.target.name]: event.target.value });
-        console.log(formData);
     }
 
     return (

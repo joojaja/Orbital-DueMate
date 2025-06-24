@@ -30,9 +30,10 @@ export default function Dashboard() {
     const user = token ? token.name : "Guest";
 
     const navigate = useNavigate();
+    
     const handleLogout = () => {
         AuthService.logout();
-        navigate("/");
+        navigate("/login");
     };
 
     // State for active tab

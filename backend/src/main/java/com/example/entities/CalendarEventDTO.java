@@ -19,8 +19,11 @@ public class CalendarEventDTO {
     private Long id;
     private String name;
     private Instant dateTime;
+    private Instant endTime;
     private Boolean allDay;
+    private String description;
     private Long userId; // Only the user ID
+    private String editedBy;
     private Instant createdAt;
     private Instant updatedAt;
 }

@@ -16,34 +16,22 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import java.time.Instant;
 
-// Definition of the CalendarEvents table
+// Definition of the CalendarInvites table
 
-// Map to CalendarEvents table in db
+// Map to CalendarInvites table in db
 @Entity
 // Specify table name
-@Table(name = "CalendarEvents")
+@Table(name = "CalendarInvites")
 // Autocreate toString, equals, hashCode, getters and setters 
 @Data
-public class CalendarEvents {
+public class CalendarInvites {
     // Designate primary key
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private Instant dateTime;
-
-    @Column
-    private Instant endTime;
-
-    @Column(nullable = false)
-    private  Boolean allDay;
-    
-    @Column
-    private String description;
+    private String status;
 
     // Foreign key to user table
     // We must pass a User object so that the Object Relational Mapping (ORM) works
@@ -53,8 +41,8 @@ public class CalendarEvents {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "fk_edited_by_user_id",nullable = false)
-    private User editedUser;
+    @JoinColumn(name = "fk_invited_by_user_id",nullable = false)
+    private User invitedByUser;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreatedDate
@@ -64,16 +52,12 @@ public class CalendarEvents {
     @LastModifiedDate
     private Instant updatedAt;
 
-    public CalendarEvents() {};
+    public CalendarInvites() {};
 
-    public CalendarEvents(String name, Instant dateTime, Instant endTime, Boolean allDay, String description, User user, User editedUser) {
-        this.name = name;
-        this.dateTime = dateTime;
-        this.endTime = endTime;
-        this.allDay = allDay;
-        this.description = description;
+    public CalendarInvites(String status, User user, User invitedByUser) {
+        this.status = status;
         this.user = user;
-        this.editedUser = editedUser;
+        this.invitedByUser = invitedByUser;
     }
     
     // Update createdAt and updatedAt when creating a new event
