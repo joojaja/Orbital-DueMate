@@ -10,7 +10,7 @@ import com.example.models.CalendarInvites;
 import com.example.models.User;
 import java.util.Optional;
 
-// Basically the queries that we perform on the user table simplified by JPA's Repository interface
+// Basically the queries that we perform on the CalendarInvites table simplified by JPA's Repository interface
 public interface CalendarInvitesRepository extends JpaRepository<CalendarInvites, Long> {
     // To update a calendar invite status by its id
     @Modifying

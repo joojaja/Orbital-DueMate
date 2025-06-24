@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import com.example.models.User;
 
-// Basically the queries that we perform on the user table simplified by JPA's Repository interface
+// Basically the queries that we perform on the CalendarEvents table simplified by JPA's Repository interface
 public interface CalendarEventsRepository extends JpaRepository<CalendarEvents, Long> {
     // To get all calendar events of a user
     List<CalendarEvents> findByUser(User user);

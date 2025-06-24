@@ -1,0 +1,16 @@
+-- // Migration script to create the initial database schema for the user table
+CREATE TABLE Modules (
+  id UUID PRIMARY KEY,
+  moduleCode VARCHAR(200) NOT NULL,
+  moduleCredit INTEGER NOT NULL,
+  category VARCHAR(200) NOT NULL,
+  subcategory VARCHAR(200),
+  subsubcategory VARCHAR(200),
+  fk_user_id UUID NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_user FOREIGN KEY(fk_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Indexes for performance optimization for faster lookups by the user's id
+CREATE INDEX idx_users_modules_id ON CalendarEvents(fk_user_id);

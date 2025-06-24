@@ -489,7 +489,7 @@ function CalendarCRUD() {
                             <MailIcon fontSize="large" color="action" />
                         </IconButton>
                     </Badge>
-                    <Button variant="contained" sx={{}} onClick={handleInviteButtonClick}>Invite</Button>
+                    <Button variant="contained" onClick={handleInviteButtonClick}>Invite</Button>
                 </Box>
             </Box>
             {/* Modal for sending invites */}
