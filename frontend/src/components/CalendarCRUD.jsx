@@ -316,7 +316,7 @@ function CalendarCRUD() {
             setEditFormMessage("Date / DateTime cannot be empty.");
             setRenderEditFormMessage(true);
         } else {
-            axios.put(apiURL + "/calendar/update/" + editFormData.id,
+            axios.put(apiURL + `/calendar/update/${editFormData.id}`,
                 {
                     name: editFormData.title,
                     dateTime: editFormData.dateTime,
@@ -367,7 +367,7 @@ function CalendarCRUD() {
     }
 
     const handleDeleteEvent = () => {
-        axios.delete(apiURL + "/calendar/delete/" + editFormData.id,
+        axios.delete(apiURL + `/calendar/delete/${editFormData.id}`,
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 setEditFormMessage("");
@@ -412,7 +412,7 @@ function CalendarCRUD() {
 
 
     const handleAcceptInvite = (entryId) => {
-        axios.put(apiURL + "/calendar/invite/accept/" + entryId, {},
+        axios.put(apiURL + `/calendar/invite/accept/${entryId}`, {},
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 setUpdateInvites(!updateInvites)
@@ -424,7 +424,7 @@ function CalendarCRUD() {
     }
 
     const handleRejectInvite = (entryId) => {
-        axios.put(apiURL + "/calendar/invite/reject/" + entryId, {},
+        axios.put(apiURL + `/calendar/invite/reject/${entryId}`, {},
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 setUpdateInvites(!updateInvites)

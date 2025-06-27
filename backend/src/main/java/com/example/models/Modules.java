@@ -40,10 +40,16 @@ public class Modules {
     private String category;
 
     @Column(nullable = true)
+    private String secondCategory;
+
+    @Column(nullable = true)
     private String subcategory;
 
     @Column(nullable = true)
     private String subsubcategory;
+
+    @Column(nullable = false)
+    private Integer level;
 
 
     // Foreign key to user table
@@ -63,13 +69,15 @@ public class Modules {
 
     public Modules() {};
 
-    public Modules(String moduleCode, Integer moduleCredit, String category, String subcategory, String subsubcategory, User user) {
+    public Modules(String moduleCode, Integer moduleCredit, String category, String subcategory, String subsubcategory, User user, String secondCategory, Integer level) {
         this.moduleCode = moduleCode;
         this.moduleCredit = moduleCredit;
         this.category = category;
         this.subcategory = subcategory;
         this.subsubcategory = subsubcategory;
         this.user = user;
+        this.secondCategory = secondCategory;
+        this.level = level;
     }
     
     // Update createdAt and updatedAt when creating a new event

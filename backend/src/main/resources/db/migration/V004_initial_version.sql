@@ -11,5 +11,5 @@ CREATE TABLE CalendarInvites (
 );
 
 -- Indexes for performance optimization for faster lookups by the user's id
-CREATE INDEX idx_users_events_id ON CalendarEvents(fk_user_id);
-CREATE INDEX idx_users_events_id ON CalendarEvents(fk_invited_by_user_id);
+CREATE INDEX idx_users_events_id ON CalendarInvites(fk_user_id);
+CREATE INDEX idx_users_events_id ON CalendarInvites(fk_invited_by_user_id);

@@ -29,7 +29,7 @@ public class CalendarController {
     public ResponseEntity<?> getCalendarEvents(@PathVariable Long id) {
         try {
             // Create new calendar event
-            User user = userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
             List<CalendarEvents> events =  this.calendarEventsRepository.findByUser(user);
             List<CalendarEventDTO> eventsMapped = events.stream().map(event -> new CalendarEventDTO(
                 event.getId(),
@@ -54,8 +54,8 @@ public class CalendarController {
     public ResponseEntity<?> createNewCalendarEvent(@RequestBody CalendarEventJSON calendarEventJSON) {
         try {
             // Create new calendar event
-            User user = userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
-            User editingUser = userRepository.findById(calendarEventJSON.getCreatedByUserId()).orElseThrow(() -> new Exception("User not found"));
+            User user = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            User editingUser = this.userRepository.findById(calendarEventJSON.getCreatedByUserId()).orElseThrow(() -> new Exception("User not found"));
             CalendarEvents calendarEvents = new CalendarEvents(calendarEventJSON.getName(), calendarEventJSON.getDateTime(), calendarEventJSON.getEndTime(),
             calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, editingUser);
             this.calendarEventsRepository.save(calendarEvents);
@@ -71,7 +71,7 @@ public class CalendarController {
     public ResponseEntity<?> updateCalendarEvent(@PathVariable Long id, @RequestBody CalendarEventJSON calendarEventJSON) {
         try {
             // Update calendar event
-            User user = userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            User user = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
             this.calendarEventsRepository.updateEventbyId(id, calendarEventJSON.getName(), calendarEventJSON.getDateTime(), 
             calendarEventJSON.getEndTime(), calendarEventJSON.getAllDay(), calendarEventJSON.getDescription(), user);
 
@@ -99,8 +99,8 @@ public class CalendarController {
     public ResponseEntity<?> createNewCalendarInvite(@RequestBody CalendarInvitesJSON calendarInvitesJSON) {
         try {
             // Create new calendar event
-            User userToBeInvited = userRepository.findByEmail(calendarInvitesJSON.getEmail()).orElseThrow(() -> new EntityNotFoundException("User not found"));
-            User invitingUser = userRepository.findById(calendarInvitesJSON.getUserId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User userToBeInvited = this.userRepository.findByEmail(calendarInvitesJSON.getEmail()).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User invitingUser = this.userRepository.findById(calendarInvitesJSON.getUserId()).orElseThrow(() -> new EntityNotFoundException("User not found"));
 
             // Check if user is inviting themself
             if (userToBeInvited.equals(invitingUser)) {
@@ -136,7 +136,7 @@ public class CalendarController {
     public ResponseEntity<?> getCalendarInvite(@PathVariable Long id) {
         try {
             // Create new calendar event
-            User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
             List<CalendarInvitedDTO> users =  this.userRepository.findPendingInvitesByUser(user);
             List<GetCalendarInvitesDTO> invites = users.stream().map(u -> new GetCalendarInvitesDTO(u.getUser().getId(), u.getUser().getName(), u.getUser().getEmail(), u.getCalendarInviteID())).toList();
             GetCalendarInvitesWithCountDTO inviteWithCount = new GetCalendarInvitesWithCountDTO(invites.size(), invites);
@@ -150,7 +150,7 @@ public class CalendarController {
     public ResponseEntity<?> getAcceptedCalendarInvite(@PathVariable Long id) {
         try {
             // Create new calendar event
-            User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
             List<User> users =  this.userRepository.findAcceptedInvitesByUser(user);
             List<AcceptedCalendarInviteJSON> invites = users.stream().map(u -> new AcceptedCalendarInviteJSON(u.getId(), u.getName(), u.getEmail())).toList();
             return ResponseEntity.status(200).body(invites);
