@@ -1,0 +1,59 @@
+package com.example.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.models.Modules;
+
+import java.util.List;
+import com.example.models.User;
+
+// Basically the queries that we perform on the Modules table simplified by JPA's Repository interface
+public interface ModulesRepository extends JpaRepository<Modules, Long> {
+    // To get all calendar events of a user
+    List<Modules> findByUser(User user);
+
+    // Check if a moduleCode already exists for a user
+    Boolean existsByModuleCodeAndUser(String moduleCode, User user);
+
+    // Get count for checking of fulfilment of breadth and depth
+    @Transactional
+    @Query("SELECT COUNT(m) FROM Modules m where m.user = :user AND m.category = :category AND m.subcategory = :subcategory AND m.subsubcategory = :subsubcategory AND m.level = :level")
+    Integer countForBreadthAndDepth(@Param("user") User user, @Param("category") String category, 
+    @Param("subcategory") String subcategory, @Param("subsubcategory") String subsubcategory, @Param("level") Integer level);
+
+    // Get Breadth and Depth 4k credits sum
+    @Transactional
+    @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.category = :category AND m.level = :level")
+    Integer get4kCreditSum(@Param("user") User user, @Param("category") String category, @Param("level") Integer level);
+
+    // Get all categories of a user
+    @Transactional
+    @Query("SELECT m FROM Modules m where m.user = :user AND m.category = :category")
+    List<Modules> getCategories(@Param("user") User user, @Param("category") String category);
+
+    // Get all subcategories of a user
+    @Transactional
+    @Query("SELECT m FROM Modules m where m.user = :user AND m.subcategory = :subcategory")
+    List<Modules> getSubCategories(@Param("user") User user, @Param("subcategory") String subcategory);
+
+    // Get sum of credits for the category
+    @Transactional
+    @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.category = :category")
+    Integer getCategoryCreditSum(@Param("user") User user, @Param("category") String category); 
+
+    // Get CP courses credits sum
+    @Transactional
+    @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.subcategory = :subcategory")
+    Integer getSubCategoryCreditSum(@Param("user") User user, @Param("subcategory") String subcategory);
+
+    // To delete a calendar event by its id
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Modules m WHERE m.id = :id")
+    void deleteModuleById(@Param("id") Long id);
+}
+

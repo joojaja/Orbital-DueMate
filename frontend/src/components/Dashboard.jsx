@@ -7,18 +7,19 @@ import { useNavigate } from "react-router-dom";
 // Importing of other tabs
 import Tasks from "./tasks";
 import Calendar from "./CalendarCRUD";
+import GradPlanning from "./GradPlanning";
 // import Grades from "./Grades";
 // import Friends from "./Friends";
 
 
 // Tab names
-const TAB_NAMES = ["Calendar", "Tasks", "Grades", "Friends"];
+const TAB_NAMES = ["Calendar", "Tasks", "Planning", "Friends"];
 
 // Map tab names to components
 const TAB_COMPONENTS = {
     Calendar: <Calendar />,
     Tasks: <Tasks />,
-    //Grades: <Grades />,
+    Planning: <GradPlanning />,
     //Friends: <Friends />,
 };
 
