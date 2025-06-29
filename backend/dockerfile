@@ -1,0 +1,9 @@
+FROM eclipse-temurin:24-jdk 
+WORKDIR /app
+COPY . .
+
+# Since we encountered issues when deploying on Render where there is no permission to run the second RUN command
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
+EXPOSE 8081
+CMD ["java", "-jar", "target/Orbital-0.0.1-SNAPSHOT.jar"]

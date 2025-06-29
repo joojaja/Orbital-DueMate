@@ -6,6 +6,9 @@ Repository for Team DueMate's Orbital project
 ---
 - Ensure that you nodejs installed
 
+- Create a .env file in frontend folder and add this lines inside:
+REACT_APP_API_URL={YOUR BACKEND URL eg. http://localhost:8081}
+
 ```bash
 cd frontend
 npm install
@@ -20,13 +23,13 @@ npm start
 - Create a database
 - Ensure that you have setup your user and password in PgAdmin4 already
 
-Go to backend/src/main/java/com/example/resources/application.properties and edit this three things
+- Create a .env file in backend folder and add this lines inside:
+PORT=8081
+DB_URL={YOUR DATABASE URL eg. jdbc:postgresql://localhost:5432/orbitaldb}
+DB_USER={YOUR DATABASE USER}
+DB_PW={YOUR DATABASE PASSWORD}
+JWT_SECRET={YOUR JWT SECRET KEY}
 
-spring.datasource.url=jdbc:postgresql://localhost:5432/{change to your database name}
-
-spring.datasource.username={change to your username}
-
-spring.datasource.password={change to your password}
 
 ```bash
 cd backend

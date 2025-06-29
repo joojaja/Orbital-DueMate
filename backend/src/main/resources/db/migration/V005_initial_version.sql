@@ -1,6 +1,6 @@
 -- // Migration script to create the initial database schema for the user table
 CREATE TABLE Modules (
-  id UUID PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   moduleCode VARCHAR(200) NOT NULL,
   moduleCredit INTEGER NOT NULL,
   category VARCHAR(200) NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE Modules (
   subcategory VARCHAR(200),
   subsubcategory VARCHAR(200),
   level INTEGER NOT NULL,
-  fk_user_id UUID NOT NULL,
+  fk_user_id BIGSERIAL NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user FOREIGN KEY(fk_user_id) REFERENCES users(id) ON DELETE CASCADE

@@ -1,6 +1,6 @@
 -- // Migration script to create the initial database schema for the user table
 CREATE TABLE CalendarEvents (
-  id UUID PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
   dateTime TIMESTAMP NOT NULL,
   allDay BOOLEAN DEFAULT TRUE,

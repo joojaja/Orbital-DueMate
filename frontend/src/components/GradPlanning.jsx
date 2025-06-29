@@ -13,7 +13,7 @@ function GradPlanning() {
     const jwtToken = token.token;
 
     // API URL 
-    const apiURL = "http://localhost:8081";
+    const apiURL = process.env.REACT_APP_API_URL;
 
     // State for storing modules
     const [mods, setMods] = useState([]);
