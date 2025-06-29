@@ -1,6 +1,6 @@
 -- // Migration script to create the initial database schema for the user table
 CREATE TABLE Modules (
-  id UUID PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   moduleCode VARCHAR(200) NOT NULL,
   moduleCredit INTEGER NOT NULL,
   category VARCHAR(200) NOT NULL,

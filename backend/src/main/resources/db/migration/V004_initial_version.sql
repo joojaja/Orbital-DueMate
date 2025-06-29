@@ -1,6 +1,6 @@
 -- // Migration script to create the initial database schema for the user table
 CREATE TABLE CalendarInvites (
-  id UUID PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   status VARCHAR(200) NOT NULL,
   fk_user_id UUID NOT NULL,
   fk_invited_by_user_id UUID NOT NULL,
