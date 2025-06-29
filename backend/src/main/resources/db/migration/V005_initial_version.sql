@@ -8,7 +8,7 @@ CREATE TABLE Modules (
   subcategory VARCHAR(200),
   subsubcategory VARCHAR(200),
   level INTEGER NOT NULL,
-  fk_user_id UUID NOT NULL,
+  fk_user_id BIGSERIAL NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user FOREIGN KEY(fk_user_id) REFERENCES users(id) ON DELETE CASCADE
