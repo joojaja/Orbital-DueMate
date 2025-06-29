@@ -11,14 +11,15 @@ export default function Tasks() {
     const [newTask, setNewTask] = useState({ title: "", due: "", notes: "" });
     
     const jwtToken = authenticationService.getCurrentUser()?.token;
+    const apiURL = process.env.REACT_APP_API_URL;
 
     const fetchTasks = useCallback(async () => {
         try {
             const [todoRes, completedRes] = await Promise.all([
-                axios.get('http://localhost:8081/api/tasks?completed=false', {
+                axios.get(`${apiURL}/api/tasks?completed=false`, {
                     headers: { "Authorization": `Bearer ${jwtToken}` }
                 }),
-                axios.get('http://localhost:8081/api/tasks?completed=true', {
+                axios.get(`${apiURL}/api/tasks?completed=true`, {
                     headers: { "Authorization": `Bearer ${jwtToken}` }
                 })
             ]);
@@ -39,7 +40,7 @@ export default function Tasks() {
 
     const handleAddTask = async (task) => {
         try {
-            await axios.post('http://localhost:8081/api/tasks', task, {
+            await axios.post(`${apiURL}/api/tasks`, task, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
             });
             setNewTask({ title: "", due: "", notes: "" });
@@ -51,7 +52,7 @@ export default function Tasks() {
 
     const handleDeleteTask = async (id) => {
         try {
-            await axios.delete(`http://localhost:8081/api/tasks/${id}`, {
+            await axios.delete(`${apiURL}/api/tasks/${id}`, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
             });
             fetchTasks();
@@ -62,7 +63,7 @@ export default function Tasks() {
 
     const moveTask = async (task, toCompleted) => {
         try {
-            await axios.put(`http://localhost:8081/api/tasks/${task.id}`, {
+            await axios.put(`${apiURL}/api/tasks/${task.id}`, {
                 ...task,
                 completed: toCompleted
             }, {
@@ -76,7 +77,7 @@ export default function Tasks() {
 
     const handleEditTask = async (editedTask) => {
         try {
-            await axios.put(`http://localhost:8081/api/tasks/${editedTask.id}`, editedTask, {
+            await axios.put(`${apiURL}/api/tasks/${editedTask.id}`, editedTask, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
             });
             fetchTasks();

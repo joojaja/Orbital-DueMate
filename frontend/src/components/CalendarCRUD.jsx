@@ -75,8 +75,7 @@ function CalendarCRUD() {
     const [acceptedCalendars, setAcceptedCalendars] = useState([{ id: currUserId, name: currUserName }]);
 
     // API URL for calendar events
-    const apiURL = "http://localhost:8081";
-
+    const apiURL = process.env.REACT_APP_API_URL;
     // API call to retrieve calendar events that is called during mount/dismount and when events are changed
     useEffect(() => {
         let dismounted = false;

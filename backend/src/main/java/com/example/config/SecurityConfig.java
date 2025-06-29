@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.example.security.jwt.*;
+import java.util.List;
 
 // Configures Spring Security
 @Configuration
@@ -63,7 +64,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource configureCORS() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000"); // Allowed endpoint to call backend
+        config.setAllowedOrigins(List.of(
+    "http://localhost:3000",
+    "https://your-vercel-app-name.vercel.app")); // Allowed endpoint to call backend
         config.addAllowedMethod("*"); // Allow all REST methods call
         config.addAllowedHeader("Authorization"); // Allow headers with Authorization which we use for JWT
         config.addAllowedHeader("Content-Type");
