@@ -66,7 +66,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
     "http://localhost:3000",
-    "https://your-vercel-app-name.vercel.app")); // Allowed endpoint to call backend
+    "https://orbital-due-mate.vercel.app/")); // Allowed endpoint to call backend
         config.addAllowedMethod("*"); // Allow all REST methods call
         config.addAllowedHeader("Authorization"); // Allow headers with Authorization which we use for JWT
         config.addAllowedHeader("Content-Type");
