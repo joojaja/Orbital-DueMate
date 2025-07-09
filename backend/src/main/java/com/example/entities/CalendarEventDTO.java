@@ -17,6 +17,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CalendarEventDTO {
     private Long id;
+    private String belongsTo; // Name of the calendar owner
     private String name;
     private Instant dateTime;
     private Instant endTime;

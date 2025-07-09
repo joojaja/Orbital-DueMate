@@ -8,6 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list";
 import { useEffect, useState } from "react";
 import { Button, Modal, Box, Typography, TextField, Switch, FormGroup, FormControlLabel, Alert, Badge, IconButton, Grid, InputLabel, MenuItem, FormControl, Select } from "@mui/material";
+import Checkbox from "@mui/material/Checkbox";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -46,7 +47,7 @@ function CalendarCRUD() {
 
     // State to hold form data for creating events
     const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: "" });
-    const [editFormData, setEditFormData] = useState({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
+    const [editFormData, setEditFormData] = useState({ belongsTo: "", title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
 
     // State to hold all day event that can be toggled
     const [createFormAllDay, setCreateFormAllDay] = useState(false);
@@ -72,45 +73,12 @@ function CalendarCRUD() {
 
     // State for selecting calendar
     const [currUserCalendar, setCurrUserCalendar] = useState(currUserId);
+    const [selectedCalendars, setSelectedCalendars] = useState(new Set()); // For multi select 
+    const [calendarChecked, setCalendarChecked] = useState({});
     const [acceptedCalendars, setAcceptedCalendars] = useState([{ id: currUserId, name: currUserName }]);
 
     // API URL for calendar events
     const apiURL = process.env.REACT_APP_API_URL;
-    // API call to retrieve calendar events that is called during mount/dismount and when events are changed
-    useEffect(() => {
-        let dismounted = false;
-        axios.get(apiURL + `/calendar/read/${currCalendarUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
-            .then(response => {
-                if (!dismounted) {
-                    const calendarEvents = response.data.map(event => {
-                        return {
-                            id: event.id,
-                            title: event.name,
-                            start: event.dateTime,
-                            end: event.endTime,
-                            allDay: event.allDay,
-                            extendedProps: {
-                                description: event.description,
-                                editedBy: event.editedBy,
-                            }
-                        }
-                    });
-
-                    setEvents(calendarEvents);
-                }
-            })
-            .catch(error => {
-                if (!dismounted) {
-                    console.log("Error happened during login: " + error)
-                }
-            });
-
-        // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
-        return () => {
-            dismounted = true;
-        }
-    }, [updateEvents, currCalendarUserId, jwtToken]);
-
 
     // API call every minute to update notifications for invites
     useEffect(() => {
@@ -157,15 +125,26 @@ function CalendarCRUD() {
         axios.get(apiURL + `/calendar/acceptedinvites/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 if (!dismounted) {
-                    const calendarInvitesAccepted = response.data.map(event => {
-                        return {
-                            id: event.id,
-                            name: event.name
-                        }
+                    const calendarInvitesAccepted = [];
+                    const calendarCheckedObj = {};
+                    response.data.forEach(event => {
+                        calendarInvitesAccepted.push({id: event.id, name: event.name});
+                        calendarCheckedObj[event.id] = false; // Initialize calendarChecked for each invite
+                    });
+                    
+                    // Extract logged in user's details and combine with accepted invites
+                    const currCalendar = [acceptedCalendars[0]];
+                    const newCalendars = currCalendar.concat(calendarInvitesAccepted);
+
+                    // Set logged in user calendar as checked
+                    calendarCheckedObj[currUserId] = true;
+                    setCalendarChecked(prev => ({ ...prev, ...calendarCheckedObj}));
+                    setSelectedCalendars(prev => {
+                        const newSet = new Set(prev);
+                        newSet.add(currUserId);
+                        return newSet;
                     });
 
-                    const currCalendar = acceptedCalendars.length > 0 ? [acceptedCalendars[0]] : [];
-                    const newCalendars = currCalendar.concat(calendarInvitesAccepted);
                     setAcceptedCalendars(newCalendars);
                 }
             })
@@ -180,6 +159,45 @@ function CalendarCRUD() {
             dismounted = true;
         }
     }, [currUserId, jwtToken, updateAcceptedInvites]);
+
+
+    // TODO axios api call for getting multi select calendars
+
+    // API call to retrieve calendar events that is called during mount/dismount and when events are changed
+    useEffect(() => {
+        let dismounted = false;
+        axios.post(apiURL + `/calendar/read`, Array.from(selectedCalendars), { headers: { "Authorization": `Bearer ${jwtToken}` }})
+            .then(response => {
+                if (!dismounted) {
+                    const calendarEvents = response.data.map(event => {
+                        return {
+                            id: event.id,
+                            title: event.name,
+                            start: event.dateTime,
+                            end: event.endTime,
+                            allDay: event.allDay,
+                            extendedProps: {
+                                description: event.description,
+                                editedBy: event.editedBy,
+                                belongsTo: event.belongsTo,
+                            }
+                        }
+                    });
+
+                    setEvents(calendarEvents);
+                }
+            })
+            .catch(error => {
+                if (!dismounted) {
+                    console.log("Error happened during login: " + error)
+                }
+            });
+
+        // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
+        return () => {
+            dismounted = true;
+        }
+    }, [updateEvents, selectedCalendars, jwtToken]);
 
 
     const handleSnackBarClose = () => {
@@ -197,7 +215,7 @@ function CalendarCRUD() {
     const handleCloseEditEventModal = () => {
         setEditFormMessage("");
         setRenderEditFormMessage(false);
-        setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
+        setEditFormData({ belongsTo: "", title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
         setEditFormAllDay(false);
         setOpenEditModal(false);
     };
@@ -224,7 +242,6 @@ function CalendarCRUD() {
         setEditFormAllDay(!editFormAllDay);
     }
 
-    // Work on logic for end time also......
     const handleCreateFormChange = (event) => {
         if (event && event.target) {
             setCreateFormData({ ...createFormData, [event.target.name]: event.target.value });
@@ -330,7 +347,7 @@ function CalendarCRUD() {
                     setEditFormMessage("");
                     setRenderEditFormMessage(false);
 
-                    setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
+                    setEditFormData({ belongsTo: "", title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
                     setEditFormAllDay(false);
                     setUpdateEvents(!updateEvents); // To tell useEffect to fetch events again
                     setOpenEditModal(false);
@@ -357,7 +374,7 @@ function CalendarCRUD() {
 
         console.log(info.event.start, info.event.end)
         setEditFormData({
-            ...editFormData, title: info.event.title, dateTime: formattedDateTime, endTime: formattedEndTime,
+            ...editFormData, belongsTo: info.event.extendedProps.belongsTo, title: info.event.title, dateTime: formattedDateTime, endTime: formattedEndTime,
             description: info.event.extendedProps.description, editedBy: info.event.extendedProps.editedBy, id: info.event.id
         });
 
@@ -372,7 +389,7 @@ function CalendarCRUD() {
                 setEditFormMessage("");
                 setRenderEditFormMessage(false);
 
-                setEditFormData({ title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
+                setEditFormData({ belongsTo: "", title: "", dateTime: "", endTime: null, description: "", editedBy: "", id: 0 });
                 setEditFormAllDay(false);
                 setUpdateEvents(!updateEvents); // To tell useEffect to fetch events again
                 setOpenEditModal(false);
@@ -442,6 +459,28 @@ function CalendarCRUD() {
         setCurrCalendarUserId(event.target.value);
     }
 
+    const toggleChecked = (event) => {
+        console.log(event.target.id, event.target.checked);
+        const checked = event.target.checked
+        const calendarId = parseInt(event.target.id);
+        setCalendarChecked(prev => ({...prev, [calendarId]: !prev[calendarId]}));
+
+        if (checked) {
+            setSelectedCalendars(prev => {
+                const newSet = new Set(prev);
+                newSet.add(calendarId);
+                return newSet;
+            });
+        } else {
+            setSelectedCalendars(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(calendarId);
+                return newSet;
+            });
+        }
+        console.log("Selected calendars: ", selectedCalendars);
+    }
+
     return (
         <div>
             <Snackbar
@@ -471,9 +510,6 @@ function CalendarCRUD() {
                         onChange={handleSelectCalendar}
                     >
                         {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
-                        {/* <MenuItem value={10}>Ten</MenuItem>
-                        <MenuItem value={20}>Twenty</MenuItem>
-                        <MenuItem value={30}>Thirty</MenuItem> */}
                     </Select>
                 </FormControl>
                 <Box sx={{
@@ -490,6 +526,21 @@ function CalendarCRUD() {
                     </Badge>
                     <Button variant="contained" onClick={handleInviteButtonClick}>Invite</Button>
                 </Box>
+            </Box>
+            <Box sx={{
+                display: "flex",
+                flexDirection: "row",
+                overflow: "auto",
+                whiteSpace: "nowrap",
+                gap: 3,
+                marginBottom: 3,
+            }}>
+
+                <FormGroup row>
+                {acceptedCalendars.map((calendar) =>
+                    <FormControlLabel key={calendar.id} control={<Checkbox checked={calendarChecked[calendar.id] || false} id={calendar.id}/>} label={calendar.name} onChange={toggleChecked}/>
+                )}
+                </FormGroup>
             </Box>
             {/* Modal for sending invites */}
             <Modal
@@ -724,6 +775,7 @@ function CalendarCRUD() {
                                     p: 4
                                     // width: "100%",
                                 }}>
+                                    <Alert severity="info">{editFormData.belongsTo}'s calendar</Alert>
                                     <TextField
                                         id="filled-search"
                                         label="Add Title"
