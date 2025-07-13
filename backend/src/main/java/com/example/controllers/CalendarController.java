@@ -210,5 +210,20 @@ public class CalendarController {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event update: " + e));
         }
     }
+
+    @DeleteMapping("/calendar/invite/delete/{userId}/{otherUserId}")
+    public ResponseEntity<?> deleteCalendarInvite(@PathVariable Long userId, @PathVariable Long otherUserId) {
+        try {
+            // Delete calendar event
+            User user = this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User invitingUser = this.userRepository.findById(otherUserId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            this.calendarInvitesRepository.deleteInviteByIds(user, invitingUser);
+
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite deleted successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar invite deletion: " + e));
+        }
+    }
 }
 

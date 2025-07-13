@@ -44,6 +44,7 @@ function CalendarCRUD() {
     const [openEditModal, setOpenEditModal] = useState(false);
     const [openInviteNotiModal, setOpenInviteNotiModal] = useState(false);
     const [openSendInviteModal, setOpenSendInviteModal] = useState(false);
+    const [openManageAcceptedCalendarModal, setOpenManageAcceptedCalendarModal] = useState(false);
 
     // State to hold form data for creating events
     const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: "" });
@@ -128,7 +129,7 @@ function CalendarCRUD() {
                     const calendarInvitesAccepted = [];
                     const calendarCheckedObj = {};
                     response.data.forEach(event => {
-                        calendarInvitesAccepted.push({id: event.id, name: event.name});
+                        calendarInvitesAccepted.push({id: event.id, name: event.name, email: event.email});
                         calendarCheckedObj[event.id] = false; // Initialize calendarChecked for each invite
                     });
                     
@@ -138,6 +139,7 @@ function CalendarCRUD() {
 
                     // Set logged in user calendar as checked
                     calendarCheckedObj[currUserId] = true;
+
                     setCalendarChecked(prev => ({ ...prev, ...calendarCheckedObj}));
                     setSelectedCalendars(prev => {
                         const newSet = new Set(prev);
@@ -159,9 +161,6 @@ function CalendarCRUD() {
             dismounted = true;
         }
     }, [currUserId, jwtToken, updateAcceptedInvites]);
-
-
-    // TODO axios api call for getting multi select calendars
 
     // API call to retrieve calendar events that is called during mount/dismount and when events are changed
     useEffect(() => {
@@ -222,6 +221,10 @@ function CalendarCRUD() {
 
     const handleCloseInviteNotiModal = () => {
         setOpenInviteNotiModal(false);
+    };
+
+    const handleCloseManageAcceptedCalendarModal = () => {
+        setOpenManageAcceptedCalendarModal(false);
     };
 
     const handleCloseSendInviteModal = () => {
@@ -404,6 +407,10 @@ function CalendarCRUD() {
         setOpenSendInviteModal(true);
     }
 
+    const handleManageAcceptedCalendarButtonClick = () => {
+        setOpenManageAcceptedCalendarModal(true);
+    }
+
     const handleSendInviteSubmit = (event) => {
         event.preventDefault();
         axios.post(apiURL + "/calendar/invite/create",
@@ -450,6 +457,18 @@ function CalendarCRUD() {
             .catch(error => { console.log("Error happened during accepting invite: " + error) });
     }
 
+    const handleRemoveAcceptedCalendar = (entryId) => {
+        axios.delete(apiURL + `/calendar/invite/delete/${currUserId}/${entryId}`,
+            { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                setUpdateAcceptedInvites(!updateAcceptedInvites);
+                setUpdateEvents(!updateEvents);
+                setSnackBarMessage("Calendar successfully removed");
+                setOpenSnackBar(true);
+            })
+            .catch(error => { console.log("Error happened during deleting invite: " + error) });
+    }
+
     const handleNotifIconClick = () => {
         setOpenInviteNotiModal(true);
     }
@@ -478,7 +497,6 @@ function CalendarCRUD() {
                 return newSet;
             });
         }
-        console.log("Selected calendars: ", selectedCalendars);
     }
 
     return (
@@ -500,7 +518,7 @@ function CalendarCRUD() {
                     p: 2,
                 }}
             >
-                <FormControl sx={{ minWidth: 200 }}>
+                {/* <FormControl sx={{ minWidth: 200 }}>
                     <InputLabel id="demo-simple-select-label"></InputLabel>
                     <Select
                         labelId="demo-simple-select-label"
@@ -511,7 +529,15 @@ function CalendarCRUD() {
                     >
                         {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
                     </Select>
-                </FormControl>
+                </FormControl> */}
+                <Box sx={{ 
+                    display: "flex", 
+                    gap: 4
+                    }}>
+                <Button variant="contained" color="success" onClick={handleInviteButtonClick}>Manage Calendar</Button>
+                <Button variant="contained" color="warning" onClick={handleManageAcceptedCalendarButtonClick}>Manage Accepted Calendars</Button>
+                </Box>
+
                 <Box sx={{
                     display: "flex",
                     justifyContent: "flex-end",
@@ -527,21 +553,86 @@ function CalendarCRUD() {
                     <Button variant="contained" onClick={handleInviteButtonClick}>Invite</Button>
                 </Box>
             </Box>
-            <Box sx={{
-                display: "flex",
-                flexDirection: "row",
-                overflow: "auto",
-                whiteSpace: "nowrap",
-                gap: 3,
-                marginBottom: 3,
-            }}>
 
-                <FormGroup row>
-                {acceptedCalendars.map((calendar) =>
-                    <FormControlLabel key={calendar.id} control={<Checkbox checked={calendarChecked[calendar.id] || false} id={calendar.id}/>} label={calendar.name} onChange={toggleChecked}/>
-                )}
-                </FormGroup>
+            {/* Multi-select for calendars */}
+            <Box
+            sx={{
+                width: "90vw",
+                maxWidth: "90vw",         
+                overflowX: "auto",         
+                whiteSpace: "nowrap",      
+                height: 70,                
+                display: "flex",
+                alignItems: "center",
+                scrollBehavior: "smooth",
+                marginBottom: 2,
+            }}
+            >
+                {acceptedCalendars.map((calendar) => (
+                    <FormControlLabel
+                    key={calendar.id}
+                    control={
+                        <Checkbox
+                        checked={calendarChecked[calendar.id] || false}
+                        id={calendar.id}
+                        />
+                    }
+                    label={calendar.name}
+                    onChange={toggleChecked}
+                    sx={{ flexShrink: 0, 
+                        marginRight: 2 }}
+                    />
+                ))}
             </Box>
+
+            {/* Modal managing accepted calendars */}
+            <Modal
+                open={openManageAcceptedCalendarModal}
+                onClose={handleCloseManageAcceptedCalendarModal}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={{
+                    position: "absolute",
+                    // width: "45%",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    bgcolor: "background.paper",
+                    border: "2px solid #000",
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    {/* Check if there is any accepted calendars or not*/}
+                    {acceptedCalendars.length >= 2 ? acceptedCalendars.slice(1).map((calendar, index) => ( // CalendarInviteID
+                        <Box key={index} sx={{ 
+                            marginBottom: 2
+                        }}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography>
+                                        Name: {calendar.name}, Email: {calendar.email}
+                                    </Typography>
+                                </Grid>
+
+                                <Grid item xs={4} container justifyContent="flex-end" spacing={2}>
+                                    <Grid item>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleRemoveAcceptedCalendar(calendar.id)}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    )) : <Typography variant="h3"> You do not have any accepted calendars</Typography>}
+                </Box>
+            </Modal>
+
+
             {/* Modal for sending invites */}
             <Modal
                 open={openSendInviteModal}
@@ -681,6 +772,18 @@ function CalendarCRUD() {
                                     p: 4
                                     // width: "100%",
                                 }}>
+                                <FormControl sx={{ minWidth: 200 }}>
+                                    <InputLabel id="demo-simple-select-label">Calendar: </InputLabel>
+                                    <Select
+                                        labelId="demo-simple-select-label"
+                                        id="demo-simple-select"
+                                        value={currUserCalendar}
+                                        // label="Age"
+                                        onChange={handleSelectCalendar}
+                                    >
+                                        {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
+                                    </Select>
+                                </FormControl>
                                     <TextField
                                         id="filled-search"
                                         label="Add Title"
