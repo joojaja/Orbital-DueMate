@@ -38,13 +38,15 @@ function CalendarCRUD() {
     const [updateEvents, setUpdateEvents] = useState(false);
     const [updateInvites, setUpdateInvites] = useState(false);
     const [updateAcceptedInvites, setUpdateAcceptedInvites] = useState(false);
+    const [updateInvitedUsers, setUpdateInvitedUsers] = useState(false);
 
     // States for modals
     const [openCreateEventModal, setOpenCreateEventModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
     const [openInviteNotiModal, setOpenInviteNotiModal] = useState(false);
     const [openSendInviteModal, setOpenSendInviteModal] = useState(false);
-    const [openManageAcceptedCalendarModal, setOpenManageAcceptedCalendarModal] = useState(false);
+    const [openManageAcceptedCalendarModal, setOpenManageAcceptedCalendarModal] = useState(false); 
+    const [openManageInvitedUsersModal, setOpenManageInvitedUsersModal] = useState(false);
 
     // State to hold form data for creating events
     const [createFormData, setCreateFormData] = useState({ title: "", dateTime: "", endTime: null, description: "" });
@@ -77,6 +79,7 @@ function CalendarCRUD() {
     const [selectedCalendars, setSelectedCalendars] = useState(new Set()); // For multi select 
     const [calendarChecked, setCalendarChecked] = useState({});
     const [acceptedCalendars, setAcceptedCalendars] = useState([{ id: currUserId, name: currUserName }]);
+    const [usersThatAcceptedInvite, setUsersThatAcceptedInvite] = useState([]);
 
     // API URL for calendar events
     const apiURL = process.env.REACT_APP_API_URL;
@@ -162,6 +165,33 @@ function CalendarCRUD() {
         }
     }, [currUserId, jwtToken, updateAcceptedInvites]);
 
+
+    // API call to get all the users that accepted invites from current user
+    useEffect(() => {
+        let dismounted = false;
+        axios.get(apiURL + `/calendar/usersThatAcceptedInvite/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                if (!dismounted) {
+                    console.log(response.data);
+                    const users = [];
+                    response.data.forEach(event => {
+                        users.push({id: event.id, name: event.name, email: event.email});
+                    });
+                    setUsersThatAcceptedInvite(users);
+                }
+            })
+            .catch(error => {
+                if (!dismounted) {
+                    console.log("Error happened during loading accepted calendar invites: " + error)
+                }
+            });
+
+        // When dismounting set it to true so that the other asynchronous calls do not update anything to avoid the concurrent error hopefully
+        return () => {
+            dismounted = true;
+        }
+    }, [currUserId, jwtToken, updateInvitedUsers]);
+
     // API call to retrieve calendar events that is called during mount/dismount and when events are changed
     useEffect(() => {
         let dismounted = false;
@@ -225,6 +255,10 @@ function CalendarCRUD() {
 
     const handleCloseManageAcceptedCalendarModal = () => {
         setOpenManageAcceptedCalendarModal(false);
+    };
+
+    const handleCloseManageInvitedUsersModal = () => {
+        setOpenManageInvitedUsersModal(false);
     };
 
     const handleCloseSendInviteModal = () => {
@@ -411,6 +445,10 @@ function CalendarCRUD() {
         setOpenManageAcceptedCalendarModal(true);
     }
 
+    const handleManageInvitedUsersModal = () => {
+        setOpenManageInvitedUsersModal(true);
+    }
+
     const handleSendInviteSubmit = (event) => {
         event.preventDefault();
         axios.post(apiURL + "/calendar/invite/create",
@@ -469,6 +507,17 @@ function CalendarCRUD() {
             .catch(error => { console.log("Error happened during deleting invite: " + error) });
     }
 
+    const handleRemoveInvitedUserFromCalendar = (entryId) => {
+        axios.delete(apiURL + `/calendar/invite/delete/${entryId}/${currUserId}`,
+            { headers: { "Authorization": `Bearer ${jwtToken}` } })
+            .then(response => {
+                setUpdateInvitedUsers(!updateInvitedUsers);
+                setSnackBarMessage("User successfully removed from your calendar");
+                setOpenSnackBar(true);
+            })
+            .catch(error => { console.log("Error happened during deleting invite: " + error) });
+    }
+
     const handleNotifIconClick = () => {
         setOpenInviteNotiModal(true);
     }
@@ -518,23 +567,11 @@ function CalendarCRUD() {
                     p: 2,
                 }}
             >
-                {/* <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel id="demo-simple-select-label"></InputLabel>
-                    <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={currUserCalendar}
-                        // label="Age"
-                        onChange={handleSelectCalendar}
-                    >
-                        {acceptedCalendars.map((calendar) => (<MenuItem value={calendar.id}>{calendar.name}</MenuItem>))}
-                    </Select>
-                </FormControl> */}
                 <Box sx={{ 
                     display: "flex", 
                     gap: 4
                     }}>
-                <Button variant="contained" color="success" onClick={handleInviteButtonClick}>Manage Calendar</Button>
+                <Button variant="contained" color="success" onClick={handleManageInvitedUsersModal}>Manage Calendar</Button>
                 <Button variant="contained" color="warning" onClick={handleManageAcceptedCalendarButtonClick}>Manage Accepted Calendars</Button>
                 </Box>
 
@@ -584,6 +621,53 @@ function CalendarCRUD() {
                     />
                 ))}
             </Box>
+
+             {/* Modal managing user's calendar invited users*/}
+            <Modal
+                open={openManageInvitedUsersModal}
+                onClose={handleCloseManageInvitedUsersModal}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={{
+                    position: "absolute",
+                    // width: "45%",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    bgcolor: "background.paper",
+                    border: "2px solid #000",
+                    boxShadow: 24,
+                    p: 4,
+                }}>
+                    {/* Check if there is any user that have accepted the invite or not*/}
+                    {usersThatAcceptedInvite.length >= 1 ? usersThatAcceptedInvite.map((user, index) => ( 
+                        <Box key={index} sx={{ 
+                            marginBottom: 2
+                        }}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item xs={8}>
+                                    <Typography>
+                                        Name: {user.name}, Email: {user.email}
+                                    </Typography>
+                                </Grid>
+
+                                <Grid item xs={4} container justifyContent="flex-end" spacing={2}>
+                                    <Grid item>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleRemoveInvitedUserFromCalendar(user.id)}
+                                        >
+                                            Remove
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    )) : <Typography variant="h3"> No users have accepted your calendar invite</Typography>}
+                </Box>
+            </Modal>
 
             {/* Modal managing accepted calendars */}
             <Modal

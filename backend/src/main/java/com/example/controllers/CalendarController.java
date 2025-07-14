@@ -225,5 +225,18 @@ public class CalendarController {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar invite deletion: " + e));
         }
     }
+
+    @GetMapping("/calendar/usersThatAcceptedInvite/read/{id}")
+    public ResponseEntity<?> getUsersThatAcceptedInvite(@PathVariable Long id) {
+        try {
+            // Create new calendar event
+            User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            List<User> users =  this.userRepository.findInvitedUserThatAccepted(user);
+            List<AcceptedCalendarInviteJSON> usersDTO = users.stream().map(u -> new AcceptedCalendarInviteJSON(u.getId(), u.getName(), u.getEmail())).toList();
+            return ResponseEntity.status(200).body(usersDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the user's calendar events: " + e));
+        }
+    }
 }
 
