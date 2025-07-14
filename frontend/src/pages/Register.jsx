@@ -41,19 +41,38 @@ function Register() {
             <form onSubmit={handleRegister}>
             <div className="Register">
                 <Box sx={{
-                    width: 300,
-                    padding: 4,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 3,
-                    boxShadow: 3,
-                    borderRadius: 2,
-                    backgroundColor: "#fafafa",
-                }}>
-                    {renderMessage && (<Alert variant="filled" severity={messageSeverity}> {message} </Alert>)}
-                    <Typography variant="h3" align="center">
-                        Register
-                    </Typography>
+                        width: "100%",
+                        maxWidth: { xs: "90%", sm: 500, md: 500 }, // Responsive max width
+                        padding: { xs: 2, sm: 3, md: 4 }, // Responsive padding
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: { xs: 2, sm: 2.5, md: 3 }, // Responsive gap
+                        boxShadow: 3,
+                        borderRadius: 2,
+                        backgroundColor: "#fafafa",
+                        margin: "0 auto", // Center the box
+                }}> 
+                    {renderMessage && (
+                            <Alert 
+                                variant="filled" 
+                                severity="warning"
+                                sx={{
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }, // Responsive font size
+                                    wordBreak: "break-word", // Prevent text overflow
+                                }}
+                            > 
+                                {message} 
+                            </Alert>
+                        )}
+                        <Typography 
+                            variant="h3" 
+                            align="center"
+                            sx={{
+                                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }, // Responsive font size
+                            }}
+                        >
+                            Register
+                        </Typography>
                     <TextField
                         id="filled-search"
                         label="Name"
