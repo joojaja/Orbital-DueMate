@@ -1,4 +1,4 @@
--- // Migration script to create the initial database schema for the user table
+-- // Migration script to create the initial database schema for the calendar invites table
 CREATE TABLE CalendarInvites (
   id BIGSERIAL PRIMARY KEY,
   status VARCHAR(200) NOT NULL,

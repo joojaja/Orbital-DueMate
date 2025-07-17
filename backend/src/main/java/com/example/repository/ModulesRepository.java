@@ -13,11 +13,24 @@ import com.example.models.User;
 
 // Basically the queries that we perform on the Modules table simplified by JPA's Repository interface
 public interface ModulesRepository extends JpaRepository<Modules, Long> {
-    // To get all calendar events of a user
+    // To get all modules of a user
     List<Modules> findByUser(User user);
 
+    @Transactional
+    void deleteByUser(User user);
+    
     // Check if a moduleCode already exists for a user
     Boolean existsByModuleCodeAndUser(String moduleCode, User user);
+
+    // Get the programme requirement modules for a user
+    @Transactional
+    @Query("SELECT m FROM Modules m where m.user = :user AND m.subcategory != 'University Pillars' AND m.category != 'Unrestricted Elective'")
+    List<Modules> getProgrammeRequirements(@Param("user") User user);
+
+    // Get the programme requirement credit sum
+    @Transactional
+    @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.subcategory != 'University Pillars' AND m.category != 'Unrestricted Elective'")
+    Integer getProgrammeRequirementsCreditSum(@Param("user") User user);
 
     // Get count for checking of fulfilment of breadth and depth
     @Transactional

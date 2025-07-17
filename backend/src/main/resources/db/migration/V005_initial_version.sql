@@ -1,4 +1,4 @@
--- // Migration script to create the initial database schema for the user table
+-- // Migration script to create the initial database schema for the modules table
 CREATE TABLE Modules (
   id BIGSERIAL PRIMARY KEY,
   moduleCode VARCHAR(200) NOT NULL,
