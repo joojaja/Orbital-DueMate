@@ -5,10 +5,11 @@ import axios from 'axios';
 const apiURL = `${process.env.REACT_APP_API_URL}/api/auth/`;
 
 class AuthenticationService {
-  login(email, password) {
+  login(email, password, otpCode) {
     return axios.post(apiURL + 'signin', {
       email,
-      password
+      password,
+      otpCode
     })
     .then(response => {
       if (response.data.token) {

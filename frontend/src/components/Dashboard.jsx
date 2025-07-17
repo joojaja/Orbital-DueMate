@@ -14,15 +14,17 @@ import { useNavigate } from "react-router-dom";
 import Tasks from "./Tasks";
 import Calendar from "./CalendarCRUD";
 import GradPlanning from "./GradPlanning";
+import Settings from "./Settings"
 
 // Tab names
-const TAB_NAMES = ["Calendar", "Tasks", "Planning"];
+const TAB_NAMES = ["Calendar", "Tasks", "Planning", "Settings"];
 
 // Map tab names to components
 const TAB_COMPONENTS = {
     Calendar: <Calendar />,
     Tasks: <Tasks />,
     Planning: <GradPlanning />,
+    Settings: <Settings />
 };
 
 export default function Dashboard() {
