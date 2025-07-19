@@ -17,10 +17,11 @@ import com.example.models.Modules;
 @AllArgsConstructor
 public class GetUserModulesJSON {
     private List<Modules> universityPillars;
-    private List<Modules> compSciFoundation;
-    private List<Modules> compSciBreadthAndDepth;
+    // private List<Modules> compSciFoundation;
+    // private List<Modules> compSciBreadthAndDepth;
+    // private List<Modules> mathAndScience;
     private List<Modules> unrestrictedElectives;
-    private List<Modules> mathAndScience;
+    private List<Modules> programmeRequirements;
     private FulfilRequirementsDTO fulfilRequirements;
     private RequirementsCreditTotalDTO creditTotalForRequirements;
 

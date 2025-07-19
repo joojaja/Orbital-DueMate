@@ -23,10 +23,10 @@ import "../styles/CalendarCRUD.css";
 function CalendarCRUD() {
     const token = authenticationService.getCurrentUser();
 
-    const currUserId = token.id;
-    const currUserName = token.name;
+    const currUserId = token ? token.id : 0;
+    const currUserName = token ? token.name : "Error";
 
-    const jwtToken = token.token;
+    const jwtToken = token ? token.token : "";
 
     // State for id of current user's calendar
     const [currCalendarUserId, setCurrCalendarUserId] = useState(token.id);

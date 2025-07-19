@@ -25,31 +25,6 @@ public class CalendarController {
         this.calendarInvitesRepository = calendarInvitesRepository;
     }
 
-    // @GetMapping("/calendar/read/{id}")
-    // public ResponseEntity<?> getCalendarEvents(@PathVariable Long id) {
-    //     try {
-    //         // Create new calendar event
-    //         User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
-    //         List<CalendarEvents> events =  this.calendarEventsRepository.findByUser(user);
-    //         List<CalendarEventDTO> eventsMapped = events.stream().map(event -> new CalendarEventDTO(
-    //             event.getId(),
-    //             event.getName(),
-    //             event.getDateTime(),
-    //             event.getEndTime(),
-    //             event.getAllDay(),
-    //             event.getDescription(),
-    //             event.getUser().getId(), // Get only the user ID
-    //             event.getEditedUser().getName(),
-    //             event.getCreatedAt(),
-    //             event.getUpdatedAt()
-    //         )).toList();
-    //         // Return a success message
-    //         return ResponseEntity.status(200).body(eventsMapped);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the user's calendar events: " + e));
-    //     }
-    // }
-
     @PostMapping("/calendar/read")
     public ResponseEntity<?> getCalendarEventsByUsers(@RequestBody List<Long> userIds) {
         try {
