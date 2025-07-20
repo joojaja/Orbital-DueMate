@@ -38,4 +38,3 @@ mvn spring-boot:run
 ```
 
 The backend server should run on port 8081 (specified in application.properties file)
-
