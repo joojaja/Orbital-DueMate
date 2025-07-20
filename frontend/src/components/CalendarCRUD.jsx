@@ -563,13 +563,17 @@ function CalendarCRUD() {
                 sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
-                    p: 2,
+                    alignItems: { xs: "stretch", sm: "center" },
+                    p: { xs: 1, sm: 2 },
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 2, sm: 0 }
                 }}
             >
                 <Box sx={{ 
                     display: "flex", 
-                    gap: 4
+                    gap: { xs: 1, sm: 4 },
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "stretch", sm: "center" }
                     }}>
                 <Button variant="contained" color="success" onClick={handleManageInvitedUsersModal}>Manage Calendar</Button>
                 <Button variant="contained" color="warning" onClick={handleManageAcceptedCalendarButtonClick}>Manage Accepted Calendars</Button>
@@ -577,10 +581,10 @@ function CalendarCRUD() {
 
                 <Box sx={{
                     display: "flex",
-                    justifyContent: "flex-end",
+                    justifyContent: { xs: "center", sm: "flex-end" },
                     alignItems: "center",
                     gap: 2,
-                    p: 2,
+                    p: { xs: 1, sm: 2 },
                 }}>
                     <Badge badgeContent={inviteCount} color="success">
                         <IconButton onClick={handleNotifIconClick}>
@@ -594,15 +598,17 @@ function CalendarCRUD() {
             {/* Multi-select for calendars */}
             <Box
             sx={{
-                width: "90vw",
-                maxWidth: "90vw",         
+                width: { xs: "95vw", sm: "90vw" },
+                maxWidth: { xs: "95vw", sm: "90vw" },         
                 overflowX: "auto",         
                 whiteSpace: "nowrap",      
-                height: 70,                
+                height: { xs: "auto", sm: 70 },                
                 display: "flex",
                 alignItems: "center",
                 scrollBehavior: "smooth",
                 marginBottom: 2,
+                padding: { xs: "8px", sm: "0" },
+                flexWrap: { xs: "wrap", sm: "nowrap" },
             }}
             >
                 {acceptedCalendars.map((calendar) => (
@@ -631,14 +637,16 @@ function CalendarCRUD() {
             >
                 <Box sx={{
                     position: "absolute",
-                    // width: "45%",
+                    width: { xs: "90%", sm: "auto" },
+                    maxHeight: { xs: "80vh", sm: "auto" },
+                    overflow: "auto",
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     bgcolor: "background.paper",
                     border: "2px solid #000",
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                 }}>
                     {/* Check if there is any user that have accepted the invite or not*/}
                     {usersThatAcceptedInvite.length >= 1 ? usersThatAcceptedInvite.map((user, index) => ( 
@@ -665,7 +673,7 @@ function CalendarCRUD() {
                                 </Grid>
                             </Grid>
                         </Box>
-                    )) : <Typography variant="h3"> No users have accepted your calendar invite</Typography>}
+                    )) : <Typography variant="h3" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' }, textAlign: { xs: 'center', sm: 'left' } }}> No users have accepted your calendar invite</Typography>}
                 </Box>
             </Modal>
 
@@ -678,14 +686,16 @@ function CalendarCRUD() {
             >
                 <Box sx={{
                     position: "absolute",
-                    // width: "45%",
+                    width: { xs: "90%", sm: "auto" },
+                    maxHeight: { xs: "80vh", sm: "auto" },
+                    overflow: "auto",
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     bgcolor: "background.paper",
                     border: "2px solid #000",
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                 }}>
                     {/* Check if there is any accepted calendars or not*/}
                     {acceptedCalendars.length >= 2 ? acceptedCalendars.slice(1).map((calendar, index) => ( // CalendarInviteID
@@ -712,7 +722,7 @@ function CalendarCRUD() {
                                 </Grid>
                             </Grid>
                         </Box>
-                    )) : <Typography variant="h3"> You do not have any accepted calendars</Typography>}
+                    )) : <Typography variant="h3" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' }, textAlign: { xs: 'center', sm: 'left' } }}> You do not have any accepted calendars</Typography>}
                 </Box>
             </Modal>
 
@@ -726,14 +736,16 @@ function CalendarCRUD() {
             >
                 <Box sx={{
                     position: "absolute",
-                    // width: "45%",
+                    width: { xs: "90%", sm: "auto" },
+                    maxHeight: { xs: "80vh", sm: "auto" },
+                    overflow: "auto",
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     bgcolor: "background.paper",
                     border: "2px solid #000",
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                 }}>
                     <form onSubmit={handleSendInviteSubmit}>
                         <div className="checkInvite">
@@ -779,14 +791,16 @@ function CalendarCRUD() {
             >
                 <Box sx={{
                     position: "absolute",
-                    // width: "45%",
+                    width: { xs: "90%", sm: "auto" },
+                    maxHeight: { xs: "80vh", sm: "auto" },
+                    overflow: "auto",
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     bgcolor: "background.paper",
                     border: "2px solid #000",
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                 }}>
                     {/* Check if there is invites or not*/}
                     {inviteCount >= 1 ? invites.map((inv, index) => ( // CalendarInviteID
@@ -833,14 +847,16 @@ function CalendarCRUD() {
             >
                 <Box sx={{
                     position: "absolute",
-                    // width: "45%",
+                    width: { xs: "90%", sm: "auto" },
+                    maxHeight: { xs: "80vh", sm: "auto" },
+                    overflow: "auto",
                     top: "50%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     bgcolor: "background.paper",
                     border: "2px solid #000",
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                 }}>
                     <form onSubmit={handleAddEventSubmit}>
                         <div className="addEvent">
@@ -852,8 +868,8 @@ function CalendarCRUD() {
                                 <Box sx={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 7,
-                                    p: 4
+                                    gap: { xs: 4, sm: 7 },
+                                    p: { xs: 2, sm: 4 },
                                     // width: "100%",
                                 }}>
                                 <FormControl sx={{ minWidth: 200 }}>
@@ -958,8 +974,8 @@ function CalendarCRUD() {
                                 <Box sx={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 7,
-                                    p: 4
+                                    gap: { xs: 4, sm: 7 },
+                                    p: { xs: 2, sm: 4 },
                                     // width: "100%",
                                 }}>
                                     <Alert severity="info">{editFormData.belongsTo}'s calendar</Alert>
@@ -1029,11 +1045,12 @@ function CalendarCRUD() {
 
                                     <Box sx={{
                                         display: "flex",
-                                        flexDirection: "row",
-                                        gap: 5
+                                        flexDirection: { xs: "column", sm: "row" },
+                                        gap: { xs: 2, sm: 5 },
+                                        width: "100%"
                                     }}>
-                                        <Button variant="contained" type="submit" sx={{ width: "40%" }}>Edit</Button>
-                                        <Button variant="contained" color="error" onClick={handleDeleteEvent} sx={{ width: "40%" }}>Delete</Button>
+                                        <Button variant="contained" type="submit" sx={{ xs: "100%", sm: "40%" }}>Edit</Button>
+                                        <Button variant="contained" color="error" onClick={handleDeleteEvent} sx={{ xs: "100%", sm: "40%" }}>Delete</Button>
                                     </Box>
                                 </Box>
                             </Box>
@@ -1048,7 +1065,7 @@ function CalendarCRUD() {
                 headerToolbar={{
                     left: "prev,next",
                     center: "title",
-                    right: "addEventButton,dayGridYear,dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+                    right: window.innerWidth < 768 ? "addEventButton" : "addEventButton,dayGridYear,dayGridMonth,timeGridWeek,timeGridDay,listWeek"
                 }}
                 customButtons={{
                     addEventButton: {

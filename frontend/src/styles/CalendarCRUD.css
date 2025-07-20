@@ -1,3 +1,16 @@
 button.fc-addEventButton-button{
     background-color: green !important;
 }
+
+.fc-toolbar-title {
+    font-size: clamp(0.9rem, 4vw, 1.75rem) !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    text-align: center !important;
+}
+
+@media (max-width: 768px) {
+.fc-toolbar-chunk {
+    display: flex !important;
+    align-items: center !important;
+}}

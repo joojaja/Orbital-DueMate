@@ -258,7 +258,7 @@ function GradPlanning() {
                         disablePortal
                         options={supportedCourses}
                         getOptionLabel={(option) => option ? option.course : ""}
-                        sx={{ width: 350 }}
+                        sx={{ width: { xs: '100%', sm: 350 } }}
                         onChange={handleCourseAutoCompleteChange}
                         value={currentCourse || ""}
                         renderOption={(props, option) => {
@@ -289,7 +289,7 @@ function GradPlanning() {
                         disablePortal
                         options={mods}
                         getOptionLabel={(option) => option.moduleCode}
-                        sx={{ width: 1000 }}
+                        sx={{ width: { xs: '100%', sm: '100%', md: 1000 } }}
                         onChange={handleAutoCompleteChange}
                         renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
@@ -308,7 +308,7 @@ function GradPlanning() {
                         // Field for user to type
                         renderInput={(items) => <TextField {...items} label="Modules" />}
                     />
-                    <Button variant="contained" onClick={handleAddModuleClick} sx={{ transform: 'scale(1.2)' }}>Add</Button>
+                    <Button variant="contained" onClick={handleAddModuleClick} sx={{ transform: { xs: 'scale(1.0)', sm: 'scale(1.2)' }, minWidth: { xs: '80px', sm: 'auto' } }}>Add</Button>
                 </Box>
 
                 <Box>
@@ -317,6 +317,7 @@ function GradPlanning() {
 
                 <Box sx={{
                     display: "flex",
+                    flexDirection: { xs: "column", md: "row" },
                     gap: 3
                 }}>
 
@@ -330,12 +331,12 @@ function GradPlanning() {
                             backgroundColor: "#fafafa",
                             borderRadius: 3,
                             minHeight: 100,
-                            p: 2,
+                            p: { xs: 1, sm: 2 },
                         }}>
                             <Typography variant="h5">Common Curriculumn Requirements ({commonCurrTotal} MCs)</Typography>
                             {commonCurr.map((mod, index) => (
                                 <Box key={index}>
-                                    <Grid container alignItems="center" spacing={2}>
+                                    <Grid container alignItems="center" spacing={{ xs: 1, sm: 2 }}>
                                         <Grid item xs={8}>
                                             <Typography>
                                                 {mod.moduleCode} ({mod.moduleCredit} MC)
@@ -367,13 +368,13 @@ function GradPlanning() {
                             {unrestrictedElective.map((mod, index) => (
                                 <Box key={index}>
                                     <Grid container alignItems="center" spacing={2}>
-                                        <Grid item xs={8}>
+                                        <Grid item xs={12} sm={8}>
                                             <Typography>
                                                 {mod.moduleCode} ({mod.moduleCredit} MC)
                                             </Typography>
                                         </Grid>
 
-                                        <Grid item xs={4} container justifyContent="flex-end" spacing={2}>
+                                        <Grid item xs={12} sm={4} container justifyContent={{ xs: "flex-start", sm: "flex-end" }} spacing={2}>
                                             <Grid item>
                                                 <Button
                                                     variant="outlined"
@@ -396,19 +397,19 @@ function GradPlanning() {
                         backgroundColor: "#fafafa",
                         borderRadius: 3,
                         minHeight: 100,
-                        p: 2,
+                        p: { xs: 1, sm: 2 },
                     }}>
                         <Typography variant="h5">Programme Requirements ({CSFoundationTotal} MCs)</Typography>
                         {programmeRequirements.map((mod, index) => (
                             <Box key={index}>
-                                <Grid container alignItems="center" spacing={2}>
-                                    <Grid item xs={8}>
+                                <Grid container alignItems="center" spacing={{ xs: 1, sm: 2 }}>
+                                    <Grid item xs={12} sm={8}>
                                         <Typography>
                                             {mod.moduleCode} ({mod.moduleCredit} MC)
                                         </Typography>
                                     </Grid>
 
-                                    <Grid item xs={4} container justifyContent="flex-end" spacing={2}>
+                                    <Grid item xs={12} sm={4} container justifyContent={{ xs: "flex-start", sm: "flex-end" }} spacing={2}>
                                         <Grid item>
                                             <Button
                                                 variant="outlined"
