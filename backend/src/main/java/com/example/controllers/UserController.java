@@ -1,9 +1,12 @@
 package com.example.controllers;
 
 import java.util.Map;
+import java.util.List;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import com.google.zxing.WriterException;
@@ -22,6 +25,7 @@ public class UserController {
 
     private final UserService userService;
     private final JWTUtility jwtUtility;
+    private final OurUserDetailsService userDetailsService;
 
     @GetMapping("/2fa-status")
     public ResponseEntity<?> get2FAStatus(@RequestHeader("Authorization") String tokenHeader) {
@@ -53,13 +57,26 @@ public class UserController {
     public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String tokenHeader, @RequestBody ChangePasswordRequest request) {
         String email = jwtUtility.getEmailFromJWT(tokenHeader.substring(7));
         userService.changePassword(email, request.getCurrentPassword(), request.getNewPassword());
-        return ResponseEntity.ok(Map.of("message", "Password changed"));
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        String jwt = jwtUtility.generateJwtToken(authentication);
+
+        return ResponseEntity.ok(Map.of("token", jwt));
     }
 
     @PostMapping("/change-email")
     public ResponseEntity<?> changeEmail(@RequestHeader("Authorization") String tokenHeader, @RequestBody ChangeEmailRequest request) {
         String email = jwtUtility.getEmailFromJWT(tokenHeader.substring(7));
         userService.changeEmail(email, request.getNewEmail());
-        return ResponseEntity.ok(Map.of("message", "Email updated"));
+
+        // Use the new email for token
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getNewEmail());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        String jwt = jwtUtility.generateJwtToken(authentication);
+
+        return ResponseEntity.ok(Map.of("token", jwt));
     }
 }
+
+

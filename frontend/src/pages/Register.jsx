@@ -55,7 +55,7 @@ function Register() {
                     {renderMessage && (
                             <Alert 
                                 variant="filled" 
-                                severity="warning"
+                                severity={messageSeverity}
                                 sx={{
                                     fontSize: { xs: '0.875rem', sm: '1rem' }, // Responsive font size
                                     wordBreak: "break-word", // Prevent text overflow

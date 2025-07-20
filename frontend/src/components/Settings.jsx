@@ -125,14 +125,17 @@ export default function Settings() {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${apiURL}/api/user/change-password`,
         { currentPassword, newPassword },
         {
           headers: { Authorization: `Bearer ${jwtToken}` },
         }
       );
-      setSnackbarMessage("Password changed successfully! ✅");
+
+      authenticationService.saveUserToken(response.data.token); // update localStorage
+
+      setSnackbarMessage("Password changed successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       setCurrentPassword("");
@@ -140,7 +143,7 @@ export default function Settings() {
       setConfirmNewPassword("");
     } catch (err) {
       console.error("Error changing password:", err);
-      const errorMessage = err.response?.data?.message || "Failed to change password. ❌";
+      const errorMessage = err.response?.data?.message || "Failed to change password.";
       setPasswordError(errorMessage);
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
@@ -175,7 +178,7 @@ export default function Settings() {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${apiURL}/api/user/change-email`,
         { currentEmail, newEmail }, 
         {
@@ -186,10 +189,14 @@ export default function Settings() {
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       setCurrentEmail(newEmail); // Update the displayed current email
+
+      authenticationService.saveUserToken(response.data.token); // update localStorage
+
       setNewEmail("");
+
     } catch (err) {
       console.error("Error changing email:", err);
-      const errorMessage = err.response?.data?.message || "Failed to change email. ❌";
+      const errorMessage = err.response?.data?.message || "Failed to change email";
       setEmailError(errorMessage);
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
@@ -289,7 +296,7 @@ export default function Settings() {
               {qrCodeImage && (
                 <Box sx={{ ml: 4, mt: 2 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Scan this QR code with your authenticator app:
+                    Scan this QR code with Google Authenticator App:
                   </Typography>
                   <img src={qrCodeImage} alt="QR Code for 2FA" style={{ width: 200, height: 200 }} />
                 </Box>

@@ -39,13 +39,29 @@ class AuthenticationService {
     return JSON.parse(localStorage.getItem('user'));
   }
 
-  saveUserToken(token) {
-    localStorage.setItem('userToken', token);
+  saveUserToken = (input) => {
+  const existingUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  if (typeof input === "string") {
+    // Case 1: update only the token
+    const updatedUser = { ...existingUser, token: input };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    
+  } else if (typeof input === "object" && input !== null && input.token) {
+    // Case 2: merge the new object with existing user info
+    const updatedUser = { ...existingUser, ...input };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  } else {
+    console.warn("saveUserToken error:", input);
   }
+};
+
 
   getUserToken() {
-    return localStorage.getItem('userToken');
+    const user = this.getCurrentUser();
+    return user?.token || null;
   }
+
     
 }
 
