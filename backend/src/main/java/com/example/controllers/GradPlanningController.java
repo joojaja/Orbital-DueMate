@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.entities.CalendarEventJSON;
 import com.example.entities.FulfilRequirementsDTO;
 import com.example.entities.GetUserModulesJSON;
 import com.example.entities.MessageResponseJSON;
@@ -25,18 +27,12 @@ import com.example.repository.*;
 public class GradPlanningController {
     private UserRepository userRepository;
     private ModulesRepository modulesRepository;
-    /*
-     * TODO:
-     * GET API to return the modules the user added previously and also the respective booleans if it fulfils that requirement
-     * POST API to create module and also the check to see if it already exist or not
-     * DELETE API to delete module
-     * Respective JSONs AND DTOs
-     */
+    private CourseSelectionRepository courseSelectionRepository;
 
-
-    public GradPlanningController(UserRepository userRepository, ModulesRepository modulesRepository) {
+    public GradPlanningController(UserRepository userRepository, ModulesRepository modulesRepository, CourseSelectionRepository courseSelectionRepository) {
         this.userRepository = userRepository;
         this.modulesRepository = modulesRepository;
+        this.courseSelectionRepository = courseSelectionRepository;
     }
 
     // Return all the modules and info for autocomplete
@@ -54,16 +50,77 @@ public class GradPlanningController {
         }
     }
 
+    // Return all the supported courses for graduation planning
+    @GetMapping("/planning/supportedCourses/read")
+    public ResponseEntity<?> getSupportCourses() {
+        try {
+            // Read JSON file
+            ObjectMapper objectMapper = new ObjectMapper();
+            ClassPathResource json = new ClassPathResource("db/supported_courses.json");
+
+            // Return the JSON file
+            return ResponseEntity.status(200).body(objectMapper.readValue(json.getInputStream(), List.class));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the courses: " + e));
+        }
+    }
+
+    // Return all the current course the user has selected previously
+    @GetMapping("/planning/selectedCourse/read/{id}")
+    public ResponseEntity<?> getSelectedCourse(@PathVariable Long id) {
+        try {
+            // Get the current user
+            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+            CourseSelection courseSelection = this.courseSelectionRepository.findByUser(user).orElseThrow(() -> new Exception("Course not found"));
+
+            // Return the JSON file
+            return ResponseEntity.status(200).body(courseSelection.getCourseSelection());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the courses: " + e));
+        }
+    }
+
+    // Update the selected course for the user
+    @PutMapping("/planning/selectedCourse/update/{id}/{course}")
+    public ResponseEntity<?> updateSelectedCourse(@PathVariable Long id, @PathVariable String course) {
+        try {
+            // Update calendar event
+            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+            this.courseSelectionRepository.updateCourseByUser(course, user);
+
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event updated successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event update: " + e));
+        }
+    }
+
+
+
+
+    /**
+     * TODO:
+     * 1) Create a new table called gradselection to store the current dropdown of the course selected for grad planning
+     * 2) When returning data collapse all the other categories apart from University Pillars and Unrestricted Electives to Programme Requirements,
+     * however leave the checking of fulfiling the requirements as the same
+     * 3) Format the data properly for the 3 other degrees, and also work on the logic for fulfilling the requirements
+     * 4) Add the dropdown to the frontend to select the course
+     */
     @GetMapping("/planning/modules/saved/read/{id}")
     public ResponseEntity<?> getUserModules(@PathVariable Long id) {
         try {
             // Get the current user and query the DB or the respectively categories of the user
             User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+
             List<Modules> universityPillars = this.modulesRepository.getSubCategories(user, "University Pillars");
-            List<Modules> compSciFoundation = this.modulesRepository.getCategories(user, "Computer Science Foundation");
-            List<Modules> compSciBreadthAndDepth = this.modulesRepository.getCategories(user, "Breadth and Depth");
             List<Modules> unrestrictedElectives = this.modulesRepository.getCategories(user, "Unrestricted Elective");
-            List<Modules> mathAndScience = this.modulesRepository.getCategories(user, "Mathematics and Sciences");
+            List<Modules> programmeRequirements = this.modulesRepository.getProgrammeRequirements(user);
+            
+            Integer programmeRequirementsCreditTotal = this.modulesRepository.getProgrammeRequirementsCreditSum(user);
+            programmeRequirementsCreditTotal =  programmeRequirementsCreditTotal == null ? 0 : programmeRequirementsCreditTotal;
+            // List<Modules> compSciFoundation = this.modulesRepository.getCategories(user, "Computer Science Foundation");
+            // List<Modules> compSciBreadthAndDepth = this.modulesRepository.getCategories(user, "Breadth and Depth");
+            // List<Modules> mathAndScience = this.modulesRepository.getCategories(user, "Mathematics and Sciences");
 
             // University Pillars
             Boolean fulfilDigitalLiteracy = fulfilDigitalLiteracy(user);
@@ -81,27 +138,6 @@ public class GradPlanningController {
             // Check if is null, if null means no mods for this category found
             universityPillarCreditTotal =  universityPillarCreditTotal == null ? 0 : universityPillarCreditTotal;
 
-            // CS Foundation
-            Boolean fulfilComputerScienceFoundation = fulfilComputerScienceFoundation(user);
-            Integer CSFoundationCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Computer Science Foundation");
-            // Check if is null, if null means no mods for this category found
-            CSFoundationCreditTotal =  CSFoundationCreditTotal == null ? 0 : CSFoundationCreditTotal;
-
-            // Breadth and Depth
-            Boolean fulfilBreadthAndDepthFocusArea = fulfilBreadthAndDepthFocusArea(user);
-            Boolean fulfilBreadthAndDepth4k = fulfilBreadthAndDepth4k(user);
-            Boolean fulfilInternship = fulfilInternship(user);
-            Boolean fulfilCPCourseRestriction = fulfilCPCourseRestriction(user);
-            Boolean fulfilBreadthAndDepth = fulfilBreadthAndDepth(user);
-            Integer breadthAndDepthCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Breadth and Depth");
-            // Check if is null, if null means no mods for this category found
-            breadthAndDepthCreditTotal =  breadthAndDepthCreditTotal == null ? 0 : breadthAndDepthCreditTotal;
-
-            // Math and Science
-            Boolean fulfilMathAndScience = fulfilMathAndScience(user);
-            Integer mathAndScienceCreditTotal =  this.modulesRepository.getCategoryCreditSum(user, "Mathematics and Sciences");
-            // Check if is null, if null means no mods for this category found
-            mathAndScienceCreditTotal =  mathAndScienceCreditTotal == null ? 0 : mathAndScienceCreditTotal;
 
             // UEs
             Boolean fulfilUnrestrictedElectives = fulfilUnrestrictedElectives(user);
@@ -110,13 +146,43 @@ public class GradPlanningController {
             unrestrictedElectivesCreditTotal =  unrestrictedElectivesCreditTotal == null ? 0 : unrestrictedElectivesCreditTotal;
 
 
-            Boolean canGraduate = fulfilUniversityPillars && fulfilComputerScienceFoundation && fulfilBreadthAndDepth && fulfilMathAndScience && fulfilUnrestrictedElectives;
+            CourseSelection courseSelection= this.courseSelectionRepository.findByUser(user).orElseThrow(() -> new Exception("Course selection not found for user"));
+            String course = courseSelection.getCourseSelection();
+            Boolean fulfilProgrammeRequirements = false;
+            
+            switch(course) {
+                case "CompSci":
+                    // CS Foundation
+                    Boolean fulfilComputerScienceFoundation = fulfilComputerScienceFoundation(user);
+                    Integer CSFoundationCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Computer Science Foundation");
+                    // Check if is null, if null means no mods for this category found
+                    CSFoundationCreditTotal =  CSFoundationCreditTotal == null ? 0 : CSFoundationCreditTotal;
 
-            return ResponseEntity.status(200).body(new GetUserModulesJSON(universityPillars, compSciFoundation, compSciBreadthAndDepth,  unrestrictedElectives, mathAndScience, 
-            new FulfilRequirementsDTO(fulfilDigitalLiteracy, fulfilCritiqueAndExpression,  fulfilCultureAndConnections, fulfilDataLiteracy, fulfilSingaporeStudies, fulfilCommunitiesAndEngagement,
-            fulfilComputingEthics, fulfilInterAndCrossDisciplinary, fulfilUniversityPillars, fulfilComputerScienceFoundation, fulfilBreadthAndDepthFocusArea, fulfilBreadthAndDepth4k,
-            fulfilInternship, fulfilCPCourseRestriction, fulfilBreadthAndDepth, fulfilMathAndScience, fulfilUnrestrictedElectives, canGraduate),
-            new RequirementsCreditTotalDTO(universityPillarCreditTotal, CSFoundationCreditTotal, breadthAndDepthCreditTotal, mathAndScienceCreditTotal, unrestrictedElectivesCreditTotal)));
+                    // Breadth and Depth
+                    Boolean fulfilBreadthAndDepthFocusArea = fulfilBreadthAndDepthFocusArea(user);
+                    Boolean fulfilBreadthAndDepth4k = fulfilBreadthAndDepth4k(user);
+                    Boolean fulfilInternship = fulfilInternship(user);
+                    Boolean fulfilCPCourseRestriction = fulfilCPCourseRestriction(user);
+                    Boolean fulfilBreadthAndDepth = fulfilBreadthAndDepth(user);
+                    Integer breadthAndDepthCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Breadth and Depth");
+                    // Check if is null, if null means no mods for this category found
+                    breadthAndDepthCreditTotal =  breadthAndDepthCreditTotal == null ? 0 : breadthAndDepthCreditTotal;
+
+                    // Math and Science
+                    Boolean fulfilMathAndScience = fulfilMathAndScience(user);
+                    Integer mathAndScienceCreditTotal =  this.modulesRepository.getCategoryCreditSum(user, "Mathematics and Sciences");
+                    // Check if is null, if null means no mods for this category found
+                    mathAndScienceCreditTotal =  mathAndScienceCreditTotal == null ? 0 : mathAndScienceCreditTotal;
+
+                    fulfilProgrammeRequirements = fulfilComputerScienceFoundation && fulfilBreadthAndDepth && fulfilMathAndScience;
+                    
+            }
+
+            Boolean canGraduate = fulfilUniversityPillars && fulfilProgrammeRequirements && fulfilUnrestrictedElectives;
+
+            return ResponseEntity.status(200).body(new GetUserModulesJSON(universityPillars, unrestrictedElectives, programmeRequirements, 
+            new FulfilRequirementsDTO(fulfilUniversityPillars, fulfilUnrestrictedElectives, fulfilProgrammeRequirements, canGraduate),
+            new RequirementsCreditTotalDTO(universityPillarCreditTotal, unrestrictedElectivesCreditTotal, programmeRequirementsCreditTotal)));
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the modules: " + e));
@@ -220,6 +286,20 @@ public class GradPlanningController {
 
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Module deleted successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during deleting module: " + e));
+        }
+    }
+
+    @DeleteMapping("/planning/modules/reset/{id}")
+    public ResponseEntity<?> resetModules(@PathVariable Long id) {
+        try {
+            // Delete all modules for user
+            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+            this.modulesRepository.deleteByUser(user);
+
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Module resetted for user successfully!"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during deleting module: " + e));
         }

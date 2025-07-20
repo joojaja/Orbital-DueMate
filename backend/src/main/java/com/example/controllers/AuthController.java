@@ -26,17 +26,21 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JWTUtility jwtUtility;
     private final UserService userService;
+    private final CourseSelectionRepository courseSelectionRepository;
 
     public AuthController(AuthenticationManager authenticationManager,
                         UserRepository userRepository,
                         PasswordEncoder passwordEncoder,
                         JWTUtility jwtUtility,
-                        UserService userService) {
+                        UserService userService,
+                        CourseSelectionRepository courseSelectionRepository) {
+
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtility = jwtUtility;
         this.userService = userService;
+        this.courseSelectionRepository = courseSelectionRepository;
     }
 
     /*
@@ -81,7 +85,11 @@ public class AuthController {
         // Create new user's account
         User user = new User(signUpRequest.getName(), signUpRequest.getEmail(), passwordEncoder.encode(signUpRequest.getPassword()));
         userRepository.save(user);
-
+        
+        // Add the default course selection for the user for Graduation Planning
+        CourseSelection courseSelection = new CourseSelection("Computer Science", user);
+        this.courseSelectionRepository.save(courseSelection);
+        
         // Return a success message
         return ResponseEntity.status(200).body(new MessageResponseJSON("User registered successfully!"));
     }

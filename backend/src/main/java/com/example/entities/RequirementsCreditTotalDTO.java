@@ -14,8 +14,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RequirementsCreditTotalDTO {
     private Integer universityPillarCreditTotal;
-    private Integer CSFoundationCreditTotal;
-    private Integer breadthAndDepthCreditTotal;
-    private Integer mathAndScienceCreditTotal;
+    // private Integer CSFoundationCreditTotal;
+    // private Integer breadthAndDepthCreditTotal;
+    // private Integer mathAndScienceCreditTotal;
     private Integer unrestrictedElectivesCreditTotal;
+    private Integer programmeRequirementsCreditTotal;
 }

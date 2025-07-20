@@ -27,4 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     @Query("SELECT u FROM User u JOIN CalendarInvites c on c.invitedByUser = u WHERE c.user = :user AND c.status = 'accepted'")
     List<User> findAcceptedInvitesByUser(@Param("user") User user);
+
+    // Find all the users that have invited the current user and the status is accepted; used to display in the dropdown
+    @Transactional
+    @Query("SELECT u FROM User u JOIN CalendarInvites c on c.user = u WHERE c.invitedByUser = :invitedByUser AND c.status = 'accepted'")
+    List<User> findInvitedUserThatAccepted(@Param("invitedByUser") User invitedByUser);
 }

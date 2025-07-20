@@ -27,4 +27,10 @@ public interface CalendarInvitesRepository extends JpaRepository<CalendarInvites
     @Transactional // DB transaction
     @Query("SELECT c FROM CalendarInvites c where c.user = :user AND c.invitedByUser = :invitedUser AND c.status = 'accepted'")
     Optional<CalendarInvites> checkIfInviteAccepted(@Param("user") User user, @Param("invitedUser") User invitedUser); // @Param binds method params to query params
+
+    // To delete a calendar event by its id
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM CalendarInvites c WHERE c.user = :user AND c.invitedByUser = :invitingUser")
+    void deleteInviteByIds(@Param("user") User userId, @Param("invitingUser") User otherUserId);
 }

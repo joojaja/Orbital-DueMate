@@ -25,14 +25,19 @@ public class CalendarController {
         this.calendarInvitesRepository = calendarInvitesRepository;
     }
 
-    @GetMapping("/calendar/read/{id}")
-    public ResponseEntity<?> getCalendarEvents(@PathVariable Long id) {
+    @PostMapping("/calendar/read")
+    public ResponseEntity<?> getCalendarEventsByUsers(@RequestBody List<Long> userIds) {
         try {
             // Create new calendar event
-            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
-            List<CalendarEvents> events =  this.calendarEventsRepository.findByUser(user);
+            List<User> users = userIds.stream()
+                .map(id -> this.userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User ID " + id + " not found")))
+                .toList();
+
+            List<CalendarEvents> events =  this.calendarEventsRepository.findByUserIn(users);
             List<CalendarEventDTO> eventsMapped = events.stream().map(event -> new CalendarEventDTO(
                 event.getId(),
+                this.userRepository.findById(event.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found")).getName(),
                 event.getName(),
                 event.getDateTime(),
                 event.getEndTime(),
@@ -178,6 +183,34 @@ public class CalendarController {
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite rejected successfully!"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar event update: " + e));
+        }
+    }
+
+    @DeleteMapping("/calendar/invite/delete/{userId}/{otherUserId}")
+    public ResponseEntity<?> deleteCalendarInvite(@PathVariable Long userId, @PathVariable Long otherUserId) {
+        try {
+            // Delete calendar event
+            User user = this.userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            User invitingUser = this.userRepository.findById(otherUserId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            this.calendarInvitesRepository.deleteInviteByIds(user, invitingUser);
+
+            // Return a success message
+            return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar invite deleted successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong during calendar invite deletion: " + e));
+        }
+    }
+
+    @GetMapping("/calendar/usersThatAcceptedInvite/read/{id}")
+    public ResponseEntity<?> getUsersThatAcceptedInvite(@PathVariable Long id) {
+        try {
+            // Create new calendar event
+            User user = this.userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            List<User> users =  this.userRepository.findInvitedUserThatAccepted(user);
+            List<AcceptedCalendarInviteJSON> usersDTO = users.stream().map(u -> new AcceptedCalendarInviteJSON(u.getId(), u.getName(), u.getEmail())).toList();
+            return ResponseEntity.status(200).body(usersDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new MessageResponseJSON("Something went wrong retrieving the user's calendar events: " + e));
         }
     }
 }

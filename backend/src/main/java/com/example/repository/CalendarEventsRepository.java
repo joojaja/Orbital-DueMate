@@ -16,6 +16,9 @@ public interface CalendarEventsRepository extends JpaRepository<CalendarEvents, 
     // To get all calendar events of a user
     List<CalendarEvents> findByUser(User user);
 
+    // To get all calendar events of a user/group of users
+    List<CalendarEvents> findByUserIn(List<User> users);
+    
     // To update a calendar event by its id
     @Modifying
     @Transactional // DB transaction
