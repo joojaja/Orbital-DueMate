@@ -45,6 +45,14 @@ public class User {
     @LastModifiedDate
     private Instant updatedAt;
 
+    // column for OTP secret key
+    @Column(name = "otp_secret_key")
+    private String otpSecretKey; // Stores the OTP secret key (e.g., as a Base32 encoded string)
+
+    // column for OTP enabled flag
+    @Column(name = "is_otp_enabled", nullable = false)
+    private boolean isOtpEnabled = false; // Boolean flag (default false) to indicate if 2FA is active for the user
+
     public User() {};
 
     public User(String name, String email, String password) {

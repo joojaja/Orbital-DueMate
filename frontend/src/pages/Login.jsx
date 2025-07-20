@@ -2,11 +2,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button, TextField, Box, Typography, Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 import AuthenticationService from "../services/authenticationService";
+import axios from "axios";
 
 function Login() {
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [renderMessage, setRenderMessage] = useState(false);
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+
     const navigate = useNavigate();
 
     // Check if there is an unauthorized message from Navigate in protectedRoute
@@ -23,32 +26,42 @@ function Login() {
             setMessage("");
             setRenderMessage(false);
         }
-    }, [authorizedMessage])
+    }, [authorizedMessage]);
 
-    const handleLogin = (event) => {
-        event.preventDefault();
-        console.log("Trying login")
-        setRenderMessage(false);
-        setMessage("")
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError(""); // clear previous error
+        try {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
+                email: formData.email,
+                password: formData.password,
+            });
 
-        AuthenticationService.login(formData.email, formData.password)
-            .then(() => navigate("/home"))
-            .catch((error) => {
-                const errorMessage = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-                    || "Login failed. Please try again.";
-                setMessage(errorMessage);
-                setRenderMessage(true);
-                console.log(error);
-            })
+            if (response.data.otpRequired) {
+                // Save temp token and navigate to OTP page
+                localStorage.setItem("tempToken", response.data.tempToken);
+                navigate("/verify-otp");
+            } else {
+                // Regular login
+                AuthenticationService.saveUserToken(response.data.token);
+                AuthenticationService.login(formData.email, formData.password)
+                                     .then(() => navigate("/home"))
+                navigate("/home");
+            }
+        } catch (err) {
+            console.log("error here");
+            setError("Invalid login");
+        }
     };
 
     const handleFormChange = (event) => {
         setFormData({ ...formData, [event.target.name]: event.target.value });
-    }
+    };
 
     return (
         <Box sx={{
             height: "100vh",
+            width: "100vw",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -56,24 +69,43 @@ function Login() {
             <form onSubmit={handleLogin}>
                 <div className="Login">
                     <Box sx={{
-                        width: 300,
-                        padding: 4,
+                        width: "100%",
+                        maxWidth: { xs: "90%", sm: 500, md: 500 }, // Responsive max width
+                        padding: { xs: 2, sm: 3, md: 4 }, // Responsive padding
                         display: "flex",
                         flexDirection: "column",
-                        gap: 3,
+                        gap: { xs: 2, sm: 2.5, md: 3 }, // Responsive gap
                         boxShadow: 3,
                         borderRadius: 2,
                         backgroundColor: "#fafafa",
+                        margin: "0 auto", // Center the box
                     }}>
-                        {renderMessage && (<Alert variant="filled" severity="warning"> {message} </Alert>)}
-                        <Typography variant="h3" align="center">
+                        {renderMessage && (
+                            <Alert
+                                variant="filled"
+                                severity="warning"
+                                sx={{
+                                    fontSize: { xs: '0.875rem', sm: '1rem' }, // Responsive font size
+                                    wordBreak: "break-word", // Prevent text overflow
+                                }}
+                            >
+                                {message}
+                            </Alert>
+                        )}
+                        <Typography
+                            variant="h3"
+                            align="center"
+                            sx={{
+                                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }, // Responsive font size
+                            }}
+                        >
                             Login
                         </Typography>
                         <TextField
                             id="filled-search"
                             label="Email"
                             name="email"
-                            type="search"
+                            type="email"
                             variant="filled"
                             onChange={handleFormChange}
                             required
@@ -88,6 +120,11 @@ function Login() {
                             onChange={handleFormChange}
                             required
                         />
+                        {error && (
+                            <Alert severity="error" sx={{ mt: 1 }}>
+                                {error}
+                            </Alert>
+                        )}
                         <Button variant="contained" type="submit">Submit</Button>
                         <a href="/register">
                             <Typography variant="h6" align="center">
@@ -98,7 +135,7 @@ function Login() {
                 </div>
             </form>
         </Box>
-    )
+    );
 }
 
 export default Login;

@@ -12,7 +12,10 @@ import com.example.security.jwt.*;
 import com.example.security.services.*;
 import com.example.models.*;
 import com.example.entities.*;
-// import java.util.Date;
+
+import org.springframework.http.HttpStatus;
+import java.util.Map;
+import java.util.List;
 
 @RestController
 // Set mapping
@@ -22,16 +25,25 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTUtility jwtUtility;
+    private final UserService userService;
     private final CourseSelectionRepository courseSelectionRepository;
-    
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository,
-            PasswordEncoder passwordEncoder, JWTUtility jwtUtility, CourseSelectionRepository courseSelectionRepository) {
+
+    public AuthController(AuthenticationManager authenticationManager,
+                        UserRepository userRepository,
+                        PasswordEncoder passwordEncoder,
+                        JWTUtility jwtUtility,
+                        UserService userService,
+                        CourseSelectionRepository courseSelectionRepository) {
+
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtility = jwtUtility;
+        this.userService = userService;
         this.courseSelectionRepository = courseSelectionRepository;
     }
+
+    /*
 
     // the endpoint for user login; /api/auth/signin
     @PostMapping("/signin")
@@ -60,6 +72,8 @@ public class AuthController {
         }
     }
 
+    */
+
     @PostMapping("/signup") // the endpoint for user register; /api/auth/signin
     public ResponseEntity<?> registerUser(@RequestBody SignupRequestJSON signUpRequest) {
         // Check if the email is already taken
@@ -79,4 +93,83 @@ public class AuthController {
         // Return a success message
         return ResponseEntity.status(200).body(new MessageResponseJSON("User registered successfully!"));
     }
+
+    // login with 2FA
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequestJSON loginRequest) {
+        try {
+            // authenticate the user first
+            User user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+
+            if (user.isOtpEnabled()) {
+                // If OTP is enabled, return temp token for verification
+                String tempToken = jwtUtility.generatePartialToken(user);
+                return ResponseEntity.ok(Map.of(
+                    "otpRequired", true,
+                    "tempToken", tempToken
+                ));
+            }
+
+            // If OTP is not enabled, authenticate and generate full token
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String jwt = jwtUtility.generateJwtToken(authentication);
+
+            // Get all of the user details from the authentication object
+            OurUserDetails userDetails = (OurUserDetails) authentication.getPrincipal();
+            
+            // Return JSON response with the JWT token and user details
+            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
+                userDetails.getName(), userDetails.getUsername(), "Bearer"));
+
+        } catch (Exception e) {
+            // Return error if invalid details
+            return ResponseEntity.status(401).body(new MessageResponseJSON("Invalid username or password"));
+        }
+        
+    }
+
+
+    // OTP page
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody OTPVerifyRequest request) {
+        try {
+            User user = jwtUtility.getUserFromPartialToken(request.getTempToken());
+
+            boolean isValid = TOTPUtil.verifyCode(user.getOtpSecretKey(), request.getOtp());
+
+            if (!isValid) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
+            }
+
+            OurUserDetails userDetails = new OurUserDetails(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getPassword(),
+                List.of()
+            );
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String jwt = jwtUtility.generateJwtToken(authentication);
+
+            
+            // Return JSON response with the JWT token and user details
+            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
+                userDetails.getName(), userDetails.getUsername(), "Bearer"));
+        
+        } catch (Exception e) {
+            // Return error if invalid details
+            return ResponseEntity.status(401).body(new MessageResponseJSON("Invalid username or password"));
+        }
+
+    }
+
+
+
 }

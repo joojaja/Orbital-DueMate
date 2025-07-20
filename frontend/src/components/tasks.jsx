@@ -1,15 +1,114 @@
-import React, { useState, useEffect, useCallback} from "react";
-import "../styles/Tasks.css"; // includes individual tasks styling
-import TaskCard from "./taskCard"; // individual tasks as a component
+// this page uses MUI and inline CSS for styling
+
+import React, { useState, useEffect, useCallback } from "react";
+import { Box, Typography, IconButton, Chip, Fab, useTheme, useMediaQuery, Container, Paper } from "@mui/material";
+import { Add as AddIcon, CheckCircle as CheckIcon, RadioButtonUnchecked as UncheckedIcon } from "@mui/icons-material";
 import axios from "axios";
 import authenticationService from "../services/authenticationService";
+import TaskCard from "./TaskCard"; // individual tasks as a component
+import NewTaskForm from "./NewTaskForm"; // new task form as a component
+
+const TaskColumn = React.memo(({ title, tasks, isCompleted, icon, showInput, setShowInput, newTask, handleTitleChange, handleDueChange, handleNotesChange, handleAddTask, handleCancelClick, handleDeleteTask, moveTask, handleEditTask }) => (
+    <Box sx={{
+        flex: 1,
+        minWidth: { xs: '100%', md: '300px' },
+        maxWidth: { xs: '100%', md: '400px' },
+    }}>
+        {/*TODO and COMPLETED top bar*/}
+        <Paper
+            sx={{
+                p: 2,
+                mb: 3,
+                borderRadius: 3,
+                bgcolor: isCompleted ? 'success.light' : 'primary.light',  // light green for completed, light blue for TODO
+                color: 'white', // color of text
+                height: '35px'
+            }}
+        >
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+            }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {icon}
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {title}
+                    </Typography>
+                    <Chip // show how many tasks left
+                        label={tasks.length}
+                        size="small"
+                        sx={{
+                            bgcolor: 'rgba(255,255,255,0.3)',
+                            color: 'white',
+                            fontWeight: 'bold'
+                        }}
+                    />
+                </Box>
+
+                {!isCompleted && (
+                    <IconButton
+                        onClick={() => setShowInput(!showInput)}
+                        sx={{ color: 'white' }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                )}
+            </Box>
+        </Paper>
+        {/*end of TODO and COMPLETED top bar*/}
+
+        {/* Add new task form */}
+        {showInput && !isCompleted && (
+            <NewTaskForm
+                newTask={newTask}
+                onTitleChange={handleTitleChange}
+                onDueChange={handleDueChange}
+                onNotesChange={handleNotesChange}
+                onAddTask={handleAddTask}
+                onCancelClick={handleCancelClick}
+            />
+        )}
+        {/* end of add new task form */}
+
+        {/* Tasks List */}
+        <Box sx={{
+            overflowY: 'auto',
+            pr: { xs: 0, md: 1 }
+        }}>
+            {tasks.length === 0 ? ( // if no task: display text that says no task
+                <Box sx={{
+                    textAlign: 'center',
+                    py: 4,
+                    color: 'text.secondary'
+                }}>
+                    <Typography sx={{ fontStyle: 'italic' }}>
+                        No {isCompleted ? 'completed' : 'todo'} tasks
+                    </Typography>
+                </Box>
+            ) : (
+                tasks.map((task, i) => (
+                    <TaskCard
+                        key={task.id || i}
+                        task={task}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onMove={() => moveTask(task, !isCompleted)}
+                        moveDirection={isCompleted ? "left" : "right"}
+                        onEdit={handleEditTask}
+                    />
+                ))
+            )}
+        </Box>
+    </Box>
+));
 
 export default function Tasks() {
     const [todo, setTodo] = useState([]);
     const [completed, setCompleted] = useState([]);
     const [showInput, setShowInput] = useState(false);
     const [newTask, setNewTask] = useState({ title: "", due: "", notes: "" });
-    
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
     const jwtToken = authenticationService.getCurrentUser()?.token;
     const apiURL = process.env.REACT_APP_API_URL;
 
@@ -28,29 +127,53 @@ export default function Tasks() {
         } catch (err) {
             console.error("Error fetching tasks:", err);
         }
-    }, [jwtToken]);
+    }, [jwtToken, apiURL]);
 
     useEffect(() => {
-        try {
-            fetchTasks();
-        } catch (e) {
-            return ("Something went wrong : " + e);
-        }
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                fetchTasks();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        fetchTasks();
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [fetchTasks]);
 
-    const handleAddTask = async (task) => {
+    // Input handlers
+    const handleTitleChange = useCallback((e) => {
+        setNewTask(prev => ({ ...prev, title: e.target.value }));
+    }, []);
+
+    const handleDueChange = useCallback((e) => {
+        setNewTask(prev => ({ ...prev, due: e.target.value }));
+    }, []);
+
+    const handleNotesChange = useCallback((e) => {
+        setNewTask(prev => ({ ...prev, notes: e.target.value }));
+    }, []);
+
+    const handleAddTask = useCallback(async (task) => {
         try {
-            await axios.post(`${apiURL}/api/tasks`, task, {
+            const response = await axios.post(`${apiURL}/api/tasks`, task, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
             });
+
+            setTodo(prev => [...prev, response.data]);
+
             setNewTask({ title: "", due: "", notes: "" });
-            fetchTasks();
+            setShowInput(false);
         } catch (err) {
             console.error("Error creating task:", err);
         }
-    };
+    }, [apiURL, jwtToken]);
 
-    const handleDeleteTask = async (id) => {
+    const handleDeleteTask = useCallback(async (id) => {
         try {
             await axios.delete(`${apiURL}/api/tasks/${id}`, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
@@ -59,9 +182,9 @@ export default function Tasks() {
         } catch (err) {
             console.error("Error deleting task:", err);
         }
-    };
+    }, [apiURL, jwtToken, fetchTasks]);
 
-    const moveTask = async (task, toCompleted) => {
+    const moveTask = useCallback(async (task, toCompleted) => {
         try {
             await axios.put(`${apiURL}/api/tasks/${task.id}`, {
                 ...task,
@@ -73,9 +196,9 @@ export default function Tasks() {
         } catch (err) {
             console.error("Error moving task:", err);
         }
-    };
+    }, [apiURL, jwtToken, fetchTasks]);
 
-    const handleEditTask = async (editedTask) => {
+    const handleEditTask = useCallback(async (editedTask) => {
         try {
             await axios.put(`${apiURL}/api/tasks/${editedTask.id}`, editedTask, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
@@ -84,79 +207,72 @@ export default function Tasks() {
         } catch (err) {
             console.error("Error updating task:", err);
         }
-    };
+    }, [apiURL, jwtToken, fetchTasks]);
+
+    const handleCancelClick = useCallback(() => {
+        setNewTask({ title: "", due: "", notes: "" });
+        setShowInput(false);
+    }, []);
 
     return (
-        <div className="tasks-board">
-            {/* TODO Column */}
-            <div className="column">
-                <div className="header">
-                    <span>TODO</span>
-                    <button className="add-task-btn" onClick={() => setShowInput(!showInput)}>+</button>
-                </div>
-                {/*input card -> will show if state is true*/}
-                {showInput && (
-                    <form // input form for new task, form is required so that Enter key can be used to add task
-                        onSubmit={(e) => {
-                            console.log(newTask);
-                            e.preventDefault();
-                            handleAddTask(newTask);
-                        }}
-                        className="input-card"
-                    >
-                        <input
-                            type="text"
-                            placeholder="Title"
-                            value={newTask.title}
-                            onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-                            maxLength={18}
-                        />
-                        <input
-                            type="date"
-                            placeholder="Due Date"
-                            value={newTask.due}
-                            onChange={e => setNewTask({ ...newTask, due: e.target.value })}
-                        />
-                        <textarea
-                            placeholder="Notes (optional)"
-                            value={newTask.notes}
-                            onChange={e => setNewTask({ ...newTask, notes: e.target.value })}
-                            rows={3}
-                            style={{ resize: 'none' }} /* prevent resizing */
-                        />
-                        <button type="submit" className="button">Add</button>
-                    </form>
-                )} {/*end of input card*/}
-                {todo.length === 0 && <div className="tasks-empty">No todo tasks</div>}
-                {todo.map((task, i) => (
-                    <TaskCard
-                        key={task.id || i}
-                        task={task}
-                        onDelete={() => handleDeleteTask(task.id, "todo")}
-                        onMove={() => moveTask(task, true)}
-                        moveDirection="right" 
-                        onEdit={(editedTask) => handleEditTask(editedTask)}
-                    />
-                ))}
-            </div> {/* End of TODO Column */}
+        <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' }, // row for mobile, column for desktop
+                gap: { xs: 3, md: 4 },
+            }}>
+                <TaskColumn
+                    title="TODO"
+                    tasks={todo}
+                    isCompleted={false}
+                    icon={<UncheckedIcon />}
+                    showInput={showInput}
+                    setShowInput={setShowInput}
+                    newTask={newTask}
+                    handleTitleChange={handleTitleChange}
+                    handleDueChange={handleDueChange}
+                    handleNotesChange={handleNotesChange}
+                    handleAddTask={handleAddTask}
+                    handleCancelClick={handleCancelClick}
+                    handleDeleteTask={handleDeleteTask}
+                    moveTask={moveTask}
+                    handleEditTask={handleEditTask}
+                />
+                <TaskColumn
+                    title="COMPLETED"
+                    tasks={completed}
+                    isCompleted={true}
+                    icon={<CheckIcon />}
+                    showInput={showInput}
+                    setShowInput={setShowInput}
+                    newTask={newTask}
+                    handleTitleChange={handleTitleChange}
+                    handleDueChange={handleDueChange}
+                    handleNotesChange={handleNotesChange}
+                    handleAddTask={handleAddTask}
+                    handleCancelClick={handleCancelClick}
+                    handleDeleteTask={handleDeleteTask}
+                    moveTask={moveTask}
+                    handleEditTask={handleEditTask}
+                />
+            </Box>
 
-            {/* COMPLETED Column */}
-            <div className="column">
-                <div className="header">
-                    <span>COMPLETED</span>
-                </div>
-                {completed.length === 0 && <div className="tasks-empty">No completed tasks</div>}
-                {completed.map((task, i) => (
-                    <TaskCard
-                        key={task.id || i}
-                        task={task}
-                        onDelete={() => handleDeleteTask(task.id, "completed")}
-                        onMove={() => moveTask(task, false)}
-                        moveDirection="left"
-                        onEdit={(editedTask) => handleEditTask(editedTask, i, "completed")}
-                    />
-                ))}
-            </div> {/* End of COMPLETED Column */}
-        </div>
+            {/* Mobile phone action button for adding tasks */}
+            {isMobile && (
+                <Fab
+                    color="primary"
+                    aria-label="add task"
+                    onClick={() => setShowInput(!showInput)}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 24,
+                        right: 24,
+                        zIndex: 1000
+                    }}
+                >
+                    <AddIcon />
+                </Fab>
+            )}
+        </Container>
     );
 }

@@ -5,10 +5,11 @@ import axios from 'axios';
 const apiURL = `${process.env.REACT_APP_API_URL}/api/auth/`;
 
 class AuthenticationService {
-  login(email, password) {
-    return axios.post(apiURL + 'signin', {
+  login(email, password, otpCode) {
+    return axios.post(apiURL + 'login', {
       email,
-      password
+      password,
+      otpCode
     })
     .then(response => {
       if (response.data.token) {
@@ -37,6 +38,16 @@ class AuthenticationService {
   getCurrentUser() {
     return JSON.parse(localStorage.getItem('user'));
   }
+
+  saveUserToken(token) {
+    localStorage.setItem('userToken', token);
+  }
+
+  getUserToken() {
+    return localStorage.getItem('userToken');
+  }
+    
 }
 
-export default new AuthenticationService();
+const authService = new AuthenticationService();
+export default authService;

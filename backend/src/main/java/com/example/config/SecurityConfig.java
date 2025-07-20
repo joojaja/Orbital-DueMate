@@ -24,11 +24,13 @@ import java.util.List;
 public class SecurityConfig {
     
     private final AuthenticationTokenFilter authenticationTokenFilter;
-    
-    public SecurityConfig(AuthenticationTokenFilter authenticationTokenFilter) {
-        this.authenticationTokenFilter = authenticationTokenFilter;
-    }
+    private final AuthenticationEntryPointJWT unauthorizedHandler;
 
+    public SecurityConfig(AuthenticationTokenFilter authenticationTokenFilter,
+                          AuthenticationEntryPointJWT unauthorizedHandler) {
+        this.authenticationTokenFilter = authenticationTokenFilter;
+        this.unauthorizedHandler = unauthorizedHandler;
+    }
 
     // Let Spring manage the returned object as beans
     @Bean
@@ -47,6 +49,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(unauthorizedHandler)
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions: server doesnt store user info but uses the token to check
             .cors(cors -> cors
                 .configurationSource(configureCORS()) // Use the CORS config
