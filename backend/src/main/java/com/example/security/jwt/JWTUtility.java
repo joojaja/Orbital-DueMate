@@ -52,7 +52,7 @@ public class JWTUtility {
             return true;
         } catch (Exception e) {
             Logger logger = LoggerFactory.getLogger(JWTUtility.class);
-            logger.error("Exception occured: {}, e");
+            logger.error("JWT validation error", e);
         } 
         return false;
     }

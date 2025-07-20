@@ -87,7 +87,7 @@ export default function Settings() {
         
       setTwoFactorEnabled((prev) => !prev);
       setSnackbarMessage(
-        `Two-factor authentication ${twoFactorEnabled ? "disabled" : "enabled"} successfully! 🔐`
+        `Two-factor authentication ${twoFactorEnabled ? "disabled" : "enabled"} successfully!`
       );
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
@@ -182,7 +182,7 @@ export default function Settings() {
           headers: { Authorization: `Bearer ${jwtToken}` },
         }
       );
-      setSnackbarMessage("Email changed successfully! 📧");
+      setSnackbarMessage("Email changed successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       setCurrentEmail(newEmail); // Update the displayed current email

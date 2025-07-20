@@ -109,7 +109,13 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String jwt = jwtUtility.generateJwtToken(authentication);
-            return ResponseEntity.ok(Map.of("token", jwt));
+
+            // Get all of the user details from the authentication object
+            OurUserDetails userDetails = (OurUserDetails) authentication.getPrincipal();
+            
+            // Return JSON response with the JWT token and user details
+            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
+                userDetails.getName(), userDetails.getUsername(), "Bearer"));
 
         } catch (Exception e) {
             // Return error if invalid details
@@ -131,13 +137,23 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
             }
 
-            // Manually authenticate
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, List.of());
+            OurUserDetails userDetails = new OurUserDetails(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getPassword(),
+                List.of()
+            );
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Generate full JWT
             String jwt = jwtUtility.generateJwtToken(authentication);
-            return ResponseEntity.ok(Map.of("token", jwt));
+
+            
+            // Return JSON response with the JWT token and user details
+            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
+                userDetails.getName(), userDetails.getUsername(), "Bearer"));
         
         } catch (Exception e) {
             // Return error if invalid details

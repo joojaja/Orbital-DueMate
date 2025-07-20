@@ -44,10 +44,12 @@ function Login() {
             } else {
                 // Regular login
                 AuthenticationService.saveUserToken(response.data.token);
+                AuthenticationService.login(formData.email, formData.password)
+                                     .then(() => navigate("/home"))
                 navigate("/home");
-                console.log("i am here")
             }
         } catch (err) {
+            console.log("error here");
             setError("Invalid login");
         }
     };

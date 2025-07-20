@@ -12,16 +12,21 @@ export default function VerifyOTP() {
 
   const handleVerify = async () => {
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/verify-otp`, {
-        tempToken,
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/verify-otp`, {
         otp,
+        tempToken
       });
-
-      authenticationService.saveUserToken(res.data.token);
-      localStorage.removeItem("tempToken");
-      navigate("/dashboard");
+      
+      if (response.data.token) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+        authenticationService.saveUserToken(response.data.token);
+        localStorage.removeItem("tempToken");
+        navigate("/home");
+      }
+      
     } catch (err) {
       setError("Invalid OTP. Try again.");
+      console.log(`Error`, err);
     }
   };
 

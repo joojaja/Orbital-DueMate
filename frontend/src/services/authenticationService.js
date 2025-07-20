@@ -6,7 +6,7 @@ const apiURL = `${process.env.REACT_APP_API_URL}/api/auth/`;
 
 class AuthenticationService {
   login(email, password, otpCode) {
-    return axios.post(apiURL + 'signin', {
+    return axios.post(apiURL + 'login', {
       email,
       password,
       otpCode
@@ -38,6 +38,16 @@ class AuthenticationService {
   getCurrentUser() {
     return JSON.parse(localStorage.getItem('user'));
   }
+
+  saveUserToken(token) {
+    localStorage.setItem('userToken', token);
+  }
+
+  getUserToken() {
+    return localStorage.getItem('userToken');
+  }
+    
 }
 
-export default new AuthenticationService();
+const authService = new AuthenticationService();
+export default authService;
