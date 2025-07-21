@@ -61,7 +61,7 @@ function GradPlanning() {
         // TODO: Milestone 3: change this to server side instead of throwing all 15k mods into autocomplete, too slow
         // Autocomplete dropdown for selecting modules to add
         let dismounted = false;
-        axios.get(apiURL + "/planning/modules/read", { headers: { "Authorization": `Bearer ${jwtToken}` } })
+        axios.get(apiURL + `/planning/modules/read/${currUserId}`, { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 if (!dismounted) {
                     setMods(response.data);
@@ -124,7 +124,6 @@ function GradPlanning() {
             .then(response => {
                 if (!dismounted) {
                     // Set mods for respective categories
-                    console.log(response.data);
                     setCommonCurr(response.data.universityPillars);
                     setUnrestrictedElective(response.data.unrestrictedElectives);
                     setProgrammeRequirements(response.data.programmeRequirements);
@@ -188,12 +187,23 @@ function GradPlanning() {
             .then(response => {
                 // Trigger API call to get user modules
                 setToggleFetchMods(prev => !prev);
+
+                // Reset module autocomplete dropdown
+                setCurrentCourse(null);
+                setSelectedModule({});
             })
             .catch(error => console.log(error));
     }
 
 
     const handleAddModuleClick = () => {
+        // Handle if user did not select a module
+        if (!selectedModule || Object.keys(selectedModule).length === 0) {
+            setSnackBarMessage("Please select a module to add");
+            setOpenSnackBar(true);
+            return;
+        }
+
         axios.post(apiURL + `/planning/modules/add/${currUserId}`,
             {
                 moduleCode: selectedModule.moduleCode,
@@ -260,7 +270,7 @@ function GradPlanning() {
                         getOptionLabel={(option) => option ? option.course : ""}
                         sx={{ width: 350 }}
                         onChange={handleCourseAutoCompleteChange}
-                        value={currentCourse || ""}
+                        value={currentCourse || null}
                         renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
 
@@ -291,6 +301,7 @@ function GradPlanning() {
                         getOptionLabel={(option) => option.moduleCode}
                         sx={{ width: 1000 }}
                         onChange={handleAutoCompleteChange}
+                        value={selectedModule && Object.keys(selectedModule).length === 0 ? null : selectedModule}
                         renderOption={(props, option) => {
                             const { key, ...optionProps } = props;
 

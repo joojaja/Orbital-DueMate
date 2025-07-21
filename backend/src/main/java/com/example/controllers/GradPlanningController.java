@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.entities.CalendarEventJSON;
 import com.example.entities.FulfilRequirementsDTO;
 import com.example.entities.GetUserModulesJSON;
 import com.example.entities.MessageResponseJSON;
@@ -36,12 +35,34 @@ public class GradPlanningController {
     }
 
     // Return all the modules and info for autocomplete
-    @GetMapping("/planning/modules/read")
-    public ResponseEntity<?> getModules() {
+    @GetMapping("/planning/modules/read/{id}")
+    public ResponseEntity<?> getModules(@PathVariable Long id) {
         try {
+            // Get the current user
+            User user = this.userRepository.findById(id).orElseThrow(() -> new Exception("User not found"));
+            CourseSelection courseSelection = this.courseSelectionRepository.findByUser(user).orElseThrow(() -> new Exception("Course not found"));
+            String course = courseSelection.getCourseSelection();
             // Read JSON file
+            String path = "";
+
+            switch(course) {
+                case "Computer Science":
+                    path = "db/modules_formatted_CS.json";
+                    break;
+                case "Business Analytics":
+                    path = "db/modules_formatted_BA.json";
+                    break;
+                case "Information Security":
+                    path = "db/modules_formatted_InfoSec.json";
+                    break;
+                case "Information Systems":
+                    path = "db/modules_formatted_IS.json";
+                    break;
+                default:
+            }
+
             ObjectMapper objectMapper = new ObjectMapper();
-            ClassPathResource json = new ClassPathResource("db/full_categorized_modules_v9.json");
+            ClassPathResource json = new ClassPathResource(path);
 
             // Return the JSON file
             return ResponseEntity.status(200).body(objectMapper.readValue(json.getInputStream(), List.class));
@@ -65,7 +86,7 @@ public class GradPlanningController {
         }
     }
 
-    // Return all the current course the user has selected previously
+    // Return the current course the user has selected previously
     @GetMapping("/planning/selectedCourse/read/{id}")
     public ResponseEntity<?> getSelectedCourse(@PathVariable Long id) {
         try {
@@ -95,17 +116,6 @@ public class GradPlanningController {
         }
     }
 
-
-
-
-    /**
-     * TODO:
-     * 1) Create a new table called gradselection to store the current dropdown of the course selected for grad planning
-     * 2) When returning data collapse all the other categories apart from University Pillars and Unrestricted Electives to Programme Requirements,
-     * however leave the checking of fulfiling the requirements as the same
-     * 3) Format the data properly for the 3 other degrees, and also work on the logic for fulfilling the requirements
-     * 4) Add the dropdown to the frontend to select the course
-     */
     @GetMapping("/planning/modules/saved/read/{id}")
     public ResponseEntity<?> getUserModules(@PathVariable Long id) {
         try {
@@ -115,12 +125,6 @@ public class GradPlanningController {
             List<Modules> universityPillars = this.modulesRepository.getSubCategories(user, "University Pillars");
             List<Modules> unrestrictedElectives = this.modulesRepository.getCategories(user, "Unrestricted Elective");
             List<Modules> programmeRequirements = this.modulesRepository.getProgrammeRequirements(user);
-            
-            Integer programmeRequirementsCreditTotal = this.modulesRepository.getProgrammeRequirementsCreditSum(user);
-            programmeRequirementsCreditTotal =  programmeRequirementsCreditTotal == null ? 0 : programmeRequirementsCreditTotal;
-            // List<Modules> compSciFoundation = this.modulesRepository.getCategories(user, "Computer Science Foundation");
-            // List<Modules> compSciBreadthAndDepth = this.modulesRepository.getCategories(user, "Breadth and Depth");
-            // List<Modules> mathAndScience = this.modulesRepository.getCategories(user, "Mathematics and Sciences");
 
             // University Pillars
             Boolean fulfilDigitalLiteracy = fulfilDigitalLiteracy(user);
@@ -145,37 +149,45 @@ public class GradPlanningController {
             // Check if is null, if null means no mods for this category found
             unrestrictedElectivesCreditTotal =  unrestrictedElectivesCreditTotal == null ? 0 : unrestrictedElectivesCreditTotal;
 
+            // Programme Requirement
+            Integer programmeRequirementsCreditTotal = this.modulesRepository.getProgrammeRequirementsCreditSum(user);
+            programmeRequirementsCreditTotal =  programmeRequirementsCreditTotal == null ? 0 : programmeRequirementsCreditTotal;
 
             CourseSelection courseSelection= this.courseSelectionRepository.findByUser(user).orElseThrow(() -> new Exception("Course selection not found for user"));
             String course = courseSelection.getCourseSelection();
+
             Boolean fulfilProgrammeRequirements = false;
             
             switch(course) {
-                case "CompSci":
+                case "Computer Science":
                     // CS Foundation
                     Boolean fulfilComputerScienceFoundation = fulfilComputerScienceFoundation(user);
-                    Integer CSFoundationCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Computer Science Foundation");
-                    // Check if is null, if null means no mods for this category found
-                    CSFoundationCreditTotal =  CSFoundationCreditTotal == null ? 0 : CSFoundationCreditTotal;
-
-                    // Breadth and Depth
-                    Boolean fulfilBreadthAndDepthFocusArea = fulfilBreadthAndDepthFocusArea(user);
-                    Boolean fulfilBreadthAndDepth4k = fulfilBreadthAndDepth4k(user);
-                    Boolean fulfilInternship = fulfilInternship(user);
-                    Boolean fulfilCPCourseRestriction = fulfilCPCourseRestriction(user);
                     Boolean fulfilBreadthAndDepth = fulfilBreadthAndDepth(user);
-                    Integer breadthAndDepthCreditTotal=  this.modulesRepository.getCategoryCreditSum(user, "Breadth and Depth");
-                    // Check if is null, if null means no mods for this category found
-                    breadthAndDepthCreditTotal =  breadthAndDepthCreditTotal == null ? 0 : breadthAndDepthCreditTotal;
 
                     // Math and Science
                     Boolean fulfilMathAndScience = fulfilMathAndScience(user);
-                    Integer mathAndScienceCreditTotal =  this.modulesRepository.getCategoryCreditSum(user, "Mathematics and Sciences");
-                    // Check if is null, if null means no mods for this category found
-                    mathAndScienceCreditTotal =  mathAndScienceCreditTotal == null ? 0 : mathAndScienceCreditTotal;
 
                     fulfilProgrammeRequirements = fulfilComputerScienceFoundation && fulfilBreadthAndDepth && fulfilMathAndScience;
-                    
+                    break;
+                case "Business Analytics":
+                    Boolean fulfilBusinessAnalyticsCoreCourse = fulfilBusinessAnalyticsCoreCourse(user);
+                    Boolean fulfilProgrammeElective = fulfilProgrammeElective(user);
+                    fulfilProgrammeRequirements = fulfilBusinessAnalyticsCoreCourse && fulfilProgrammeElective;
+                    break;
+                case "Information Security":
+                    Boolean fulfilComputingFoundationInfoSec = fulfilComputingFoundationInfoSec(user);
+                    Boolean fulfilProgrammeElectiveInfoSec = fulfilProgrammeElectiveInfoSec(user);
+                    Boolean fulfilComputingRequirementInfoSec = fulfilComputingRequirementInfoSec(user);
+
+                    fulfilUnrestrictedElectives = fulfilUnrestrictedElectivesInfoSec(user);
+                    fulfilProgrammeRequirements = fulfilComputingFoundationInfoSec && fulfilProgrammeElectiveInfoSec && fulfilComputingRequirementInfoSec;
+                    break;
+                case "Information Systems":
+                    Boolean fulfilInformationSystemCoreCourse = fulfilInformationSystemCoreCourse(user);
+                    Boolean fulfilProgrammeElectiveInformationSystem = fulfilProgrammeElectiveInformationSystem(user);
+                    fulfilProgrammeRequirements = fulfilInformationSystemCoreCourse && fulfilProgrammeElectiveInformationSystem;
+                    break;
+                default:
             }
 
             Boolean canGraduate = fulfilUniversityPillars && fulfilProgrammeRequirements && fulfilUnrestrictedElectives;
@@ -189,9 +201,6 @@ public class GradPlanningController {
         }
     }
 
-
-    // POST API
-    // Rmb to add special check for CS2103T/ CS2103 only can take one, if one exists cannot add the other
     
     @PostMapping("/planning/modules/add/{id}")
     public ResponseEntity<?> addModuleForUser(@PathVariable Long id, @RequestBody ModuleAddedDTO moduleAddedDTO) {
@@ -251,19 +260,10 @@ public class GradPlanningController {
                         category = "Unrestricted Elective";
                     }
                     break;
-                case "Internship":
-                    if (getCompletedInternshipCredits(user) + moduleCredit > 12) {
-                        throw new IllegalStateException("Adding this internship will violate the restriction for Industry Experience courses");
-                    }
-                case "Breadth and Depth":
-                    if (subcategory.equals("CP") && getCompletedCPCredits(user) + moduleCredit > 12) {
-                        category = "Unrestricted Elective";
-                    }
+
                 default:
             }
-
-
-
+    
             Modules module = new Modules(moduleCode, moduleCredit, category, subcategory, 
             subsubcategory, user, secondCategory, level);
 
@@ -310,57 +310,57 @@ public class GradPlanningController {
 
     // *** Check for fulfilment of University Pillars
     public boolean fulfilDigitalLiteracy(User user) {
-        if (modulesRepository.getCategories(user, "Digital Literacy").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Digital Literacy").size() == 1) {
             return true;
         }
         return false;
     }
 
     public boolean fulfilCritiqueAndExpression(User user) {
-        if (modulesRepository.getCategories(user, "Critique and Expression").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Critique and Expression").size() == 1) {
             return true;
         }
         return false;
     }
 
     public boolean fulfilCultureAndConnections(User user) {
-        if (modulesRepository.getCategories(user, "Cultures and Connections").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Cultures and Connections").size() == 1) {
             return true;
         }
         return false;
     }
 
     public boolean fulfilDataLiteracy(User user) {
-        if (modulesRepository.getCategories(user, "Data Literacy").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Data Literacy").size() == 1) {
             return true;
         }
         return false;
     }
 
     public boolean fulfilSingaporeStudies(User user) {
-        if (modulesRepository.getCategories(user, "Singapore Studies").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Singapore Studies").size() == 1) {
             return true;
         }
         return false;
     }
 
     public boolean fulfilCommunitiesAndEngagement(User user) {
-        if (modulesRepository.getCategories(user, "Communities and Engagement").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Communities and Engagement").size() == 1) {
             return true;
         }
         return false;
     } 
 
     public boolean fulfilComputingEthics(User user) {
-        if (modulesRepository.getCategories(user, "Computing Ethics").size() == 1) {
+        if (this.modulesRepository.getCategories(user, "Computing Ethics").size() == 1) {
             return true;
         }
         return false;
     } 
 
     public boolean fulfilInterAndCrossDisciplinary(User user) {
-        int interCount = modulesRepository.getCategories(user, "Interdisciplinary").size();
-        int crossCount = modulesRepository.getCategories(user, "Cross-Disciplinary").size();
+        int interCount = this.modulesRepository.getCategories(user, "Interdisciplinary").size();
+        int crossCount = this.modulesRepository.getCategories(user, "Cross-Disciplinary").size();
         int totalInterAndCrossCount = interCount + crossCount;
 
         if (totalInterAndCrossCount == 3 && crossCount <= 1) {
@@ -374,7 +374,7 @@ public class GradPlanningController {
     // If false just throw to UE if true throw to CD
     // For inter just need to check fulfilInterAndCrossDisciplinary if true throw to UE if false just throw to ID
     public boolean acceptableIfAddCross(User user) {
-        int crossCount = modulesRepository.getCategories(user, "Cross-Disciplinary").size();
+        int crossCount = this.modulesRepository.getCategories(user, "Cross-Disciplinary").size();
 
         if (crossCount + 1 <= 1) {
             return true;
@@ -383,10 +383,32 @@ public class GradPlanningController {
         return false;
     } 
 
+    // Get the total credits of UE
+    public Integer getCompletedUnrestrictedElectivesCreditSum(User user) {
+        return this.modulesRepository.getCategoryCreditSum(user, "Unrestricted Elective");
+    }
+
+    // Check for fulfilment of UE
+    public boolean fulfilUnrestrictedElectives(User user) {
+        Integer credits = getCompletedUnrestrictedElectivesCreditSum(user);
+
+        // If null means not CP courses in db for the user
+        if (credits == null) {
+            return false;
+        }
+
+        if (credits >= 40) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // *** FOR CS DEGREE FULFILMENT CHECKS ***
 
     // *** Check for fulfilment of CS Foundations
     public boolean fulfilComputerScienceFoundation(User user) {
-        int csFoundationCount = modulesRepository.getCategories(user, "Computer Science Foundation").size();
+        int csFoundationCount = this.modulesRepository.getCategories(user, "Computer Science Foundation").size();
 
         if (csFoundationCount == 9) {
             return true;
@@ -406,21 +428,13 @@ public class GradPlanningController {
         boolean fulfilled = false;
 
         for (int i = 0; i < focusAreaCategory.length; i++) {
-            int threeKCount = modulesRepository.countForBreadthAndDepth(user, "Breadth and Depth", focusAreaCategory[i], "primary", 3);
-            int fourKCount = modulesRepository.countForBreadthAndDepth(user, "Breadth and Depth", focusAreaCategory[i], "primary", 4);
-            
+            int threeKCount = this.modulesRepository.countForBreadthAndDepth(user, "Breadth and Depth", focusAreaCategory[i], "primary", 3);
+            int fourKCount = this.modulesRepository.countForBreadthAndDepth(user, "Breadth and Depth", focusAreaCategory[i], "primary", 4);
 
             // For special cases of double counting like CS2109S, CS2103/CS2103T, CS3230
-            threeKCount += modulesRepository.countForBreadthAndDepth(user, "Computer Science Foundation", focusAreaCategory[i], "primary", 3);
-            fourKCount += modulesRepository.countForBreadthAndDepth(user, "Computer Science Foundation", focusAreaCategory[i], "primary", 4);
+            threeKCount += this.modulesRepository.countForBreadthAndDepth(user, "Computer Science Foundation", focusAreaCategory[i], "primary", 3);
+            fourKCount += this.modulesRepository.countForBreadthAndDepth(user, "Computer Science Foundation", focusAreaCategory[i], "primary", 4);
 
-            /*
-             * "category": "Computer Science Foundation",
-                "subcategory": "Artificial Intelligence",
-                "subsubcategory": "primary",
-                "level": 2,
-                "secondCategory": "Breadth and Depth"
-             */
             int totalCount = threeKCount + fourKCount;
 
             if (fourKCount >= 1 && totalCount >= 3) {
@@ -433,7 +447,7 @@ public class GradPlanningController {
 
     // Check if the 4ks in Breadth and Depth module credit is >= 12MCS
     public boolean fulfilBreadthAndDepth4k(User user) {
-        Integer credits = modulesRepository.get4kCreditSum(user, "Breadth and Depth", 4);
+        Integer credits = this.modulesRepository.get4kCreditSum(user, "Breadth and Depth", 4);
 
         if (credits == null) {
             return false;
@@ -449,7 +463,7 @@ public class GradPlanningController {
 
     // Check for fulfilment of Math and Science
     public boolean fulfilMathAndScience(User user) {
-        int csFoundationCount = modulesRepository.getCategories(user, "Mathematics and Sciences").size();
+        int csFoundationCount = this.modulesRepository.getCategories(user, "Mathematics and Sciences").size();
 
         if (csFoundationCount == 3) {
             return true;
@@ -460,7 +474,7 @@ public class GradPlanningController {
 
     // Get the total credits of internship completed
     public Integer getCompletedInternshipCredits(User user) {
-        return modulesRepository.getCategoryCreditSum(user, "Internship");
+        return this.modulesRepository.getCategoryCreditSum(user, "Internship");
     }
 
     // Check for fulfilment of Internship/ Industry Experience
@@ -484,7 +498,7 @@ public class GradPlanningController {
     // Get the total credits of CP Courses
     // If Current CP sum + current module to add > 12 cant add
     public Integer getCompletedCPCredits(User user) {
-        return modulesRepository.getSubCategoryCreditSum(user, "CP");
+        return this.modulesRepository.getSubCategoryCreditSum(user, "CP");
     }
     
 
@@ -516,13 +530,94 @@ public class GradPlanningController {
         return false;
     }
 
-    // Get the total credits of internship completed
-    public Integer getCompletedUnrestrictedElectivesCreditSum(User user) {
-        return modulesRepository.getCategoryCreditSum(user, "Unrestricted Elective");
-    }
+    // *** FULFILMENT CHECKS FOR Business Analytics ***
 
-    // Check for fulfilment of Math and Science
-    public boolean fulfilUnrestrictedElectives(User user) {
+    // Check if fulfil Core Courses 
+    public boolean fulfilBusinessAnalyticsCoreCourse(User user) {
+        int coreCourseCount = this.modulesRepository.getCategories(user, "Core Course").size();
+
+        if (coreCourseCount == 12) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    // Check if fulfil Programme Elective
+    public boolean fulfilProgrammeElective(User user) {
+        int programmeElectiveCount = this.modulesRepository.countForCategory(user, "Programme Elective");
+        int fourKCount = this.modulesRepository.countForCategoryAndLevel(user, "Programme Elective", 4);
+        int BTCount = this.modulesRepository.countForCategoryAndSubCategory(user, "Programme Elective", "BT");
+
+        if (programmeElectiveCount >= 5 && fourKCount >= 3 && BTCount >= 3) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    // *** FULFILMENT CHECKS FOR InfoSec *** 
+    public boolean fulfilComputingFoundationInfoSec(User user) {
+        int csFoundationCount = this.modulesRepository.getCategories(user, "Computing Foundation").size();
+
+        if (csFoundationCount == 12) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    public boolean fulfilProgrammeElectiveInfoSec(User user) {
+        Integer credits = this.modulesRepository.getCategoryCreditSum(user, "Programme Elective");
+
+        if (credits == null) {
+            return false;
+        }
+
+        if (credits >= 8) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    public boolean fulfilComputingRequirementInfoSec(User user) {
+        Integer CScount = 0;
+        Integer IScount = 0;
+
+        CScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",3) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",3);
+
+        CScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",4) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",4);
+
+        CScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",5) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "CS",5);
+
+
+        IScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",3) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",3);
+
+        IScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",4) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",4);
+
+        IScount += this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",5) == null ? 0 
+        : this.modulesRepository.countForCategoryAndSubCategoryAndLevelCreditSum(user, "Computing Requirement", "IS",5);
+
+        Integer CPCount = this.modulesRepository.getSubCategoryCreditSum(user, "CP") == null ? 0 
+        : this.modulesRepository.getSubCategoryCreditSum(user, "CP");
+
+        int totalCount = CScount + IScount + CPCount;
+
+        if (totalCount >= 12 && getCompletedInternshipCredits(user) >= 6) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    // Check for fulfilment of UE for InfoSec
+    public boolean fulfilUnrestrictedElectivesInfoSec(User user) {
         Integer credits = getCompletedUnrestrictedElectivesCreditSum(user);
 
         // If null means not CP courses in db for the user
@@ -530,13 +625,35 @@ public class GradPlanningController {
             return false;
         }
 
-        if (credits >= 40) {
+        if (credits >= 36) {
             return true;
         }
 
         return false;
     }
 
+    // *** FULFILMENT CHECKS FOR Information System *** 
+    public boolean fulfilInformationSystemCoreCourse(User user) {
+        int coreCourseCount = this.modulesRepository.getCategories(user, "Core Course").size();
+
+        if (coreCourseCount == 12) {
+            return true;
+        }
+
+        return false;
+    } 
+
+    // Check if fulfil Programme Elective
+    public boolean fulfilProgrammeElectiveInformationSystem(User user) {
+        int programmeElectiveCount = this.modulesRepository.countForCategory(user, "Programme Elective");
+        int fourKCount = this.modulesRepository.countForCategoryAndLevel(user, "Programme Elective", 4);
+
+        if (programmeElectiveCount >= 5 && fourKCount >= 3) {
+            return true;
+        }
+
+        return false;
+    } 
 }
 
 
