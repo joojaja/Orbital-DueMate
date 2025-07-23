@@ -8,8 +8,9 @@ import jakarta.persistence.EntityNotFoundException;
 
 import com.example.models.*;
 import com.example.entities.*;
-import java.util.List;
 
+import java.util.List;
+import com.example.security.services.*;
 
 @RestController
 // Set mapping
@@ -18,11 +19,14 @@ public class CalendarController {
     private final CalendarEventsRepository calendarEventsRepository;
     private final UserRepository userRepository;
     private final CalendarInvitesRepository calendarInvitesRepository;
+    private final EmailService emailService;
 
-    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository, CalendarInvitesRepository calendarInvitesRepository) {
+    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository, CalendarInvitesRepository calendarInvitesRepository
+    , EmailService emailService) {
         this.userRepository = userRepository;
         this.calendarEventsRepository = calendarEventsRepository;
         this.calendarInvitesRepository = calendarInvitesRepository;
+        this.emailService = emailService;
     }
 
     @PostMapping("/calendar/read")
@@ -65,6 +69,22 @@ public class CalendarController {
             calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, editingUser);
             this.calendarEventsRepository.save(calendarEvents);
 
+            this.calendarInvitesRepository.findByInvitedByUser(user)
+            .forEach(invite -> {
+                    if (!invite.getUser().equals(user)) {
+                        System.out.println("Sending email to " + invite.getUser().getEmail());
+                        String receiverEmail = invite.getUser().getEmail();
+                        String subject = "New Calendar Event created for " + user.getName() + "'s calendar";
+                        String text = "A new calendar event has been created by " + editingUser.getName() + " for " + user.getName() + "'s calendar.\n" +
+                        "Event Name: " + calendarEventJSON.getName() + "\n" +
+                        "Start Time: " + calendarEventJSON.getDateTime() + "\n" +
+                        "End Time: " + calendarEventJSON.getEndTime() + "\n" +
+                        "All Day event: " + calendarEventJSON.getAllDay() + "\n" +
+                        "Description: " + calendarEventJSON.getDescription();
+                        this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                    }
+            });
+
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event created successfully!"));
         } catch (Exception e) {
@@ -77,9 +97,26 @@ public class CalendarController {
         try {
             // Update calendar event
             User user = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            CalendarEvents currentEvent = this.calendarEventsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Calendar event not found"));
+
             this.calendarEventsRepository.updateEventbyId(id, calendarEventJSON.getName(), calendarEventJSON.getDateTime(), 
             calendarEventJSON.getEndTime(), calendarEventJSON.getAllDay(), calendarEventJSON.getDescription(), user);
 
+            User calendarOwner = currentEvent.getUser();
+
+            this.calendarInvitesRepository.findByInvitedByUser(calendarOwner).forEach(invite -> {
+                if (!invite.getUser().equals(user)) {
+                    String receiverEmail = invite.getUser().getEmail();
+                    String subject = "Calendar Event updated for " + calendarOwner.getName() + "'s calendar";
+                    String text = "A calendar event has been updated by " + user.getName() + " for " + calendarOwner.getName() + "'s calendar.\n" +
+                    "Event Name: " + currentEvent.getName() + " -> " + calendarEventJSON.getName() + "\n" +
+                    "Start Time: " + currentEvent.getDateTime() + " -> " + calendarEventJSON.getDateTime() + "\n" +
+                    "End Time: " + currentEvent.getEndTime() + " -> " + calendarEventJSON.getEndTime() + "\n" +
+                    "All Day event: " + currentEvent.getAllDay() + " -> " + calendarEventJSON.getAllDay() + "\n" +
+                    "Description: " + currentEvent.getDescription() + " -> " + calendarEventJSON.getDescription();
+                    this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                }
+            });
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event updated successfully!"));
         } catch (Exception e) {
@@ -87,12 +124,29 @@ public class CalendarController {
         }
     }
 
-    @DeleteMapping("/calendar/delete/{id}")
-    public ResponseEntity<?> deleteCalendarEvent(@PathVariable Long id) {
+    @DeleteMapping("/calendar/delete/{id}/{currUserId}")
+    public ResponseEntity<?> deleteCalendarEvent(@PathVariable Long id, @PathVariable Long currUserId) {
         try {
             // Delete calendar event
+            User user = this.userRepository.findById(currUserId).orElseThrow(() -> new Exception("User not found"));
+            CalendarEvents currentEvent = this.calendarEventsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Calendar event not found"));
+            User calendarOwner = currentEvent.getUser();
+
             this.calendarEventsRepository.deleteEventById(id);
 
+            this.calendarInvitesRepository.findByInvitedByUser(calendarOwner).forEach(invite -> {
+                if (!invite.getUser().equals(user)) {
+                    String receiverEmail = invite.getUser().getEmail();
+                    String subject = "Calendar Event deleted for " + calendarOwner.getName() + "'s calendar";
+                    String text = "A calendar event has been deleted by " + user.getName() + " for " + calendarOwner.getName() + "'s calendar.\n" +
+                    "Event Name: " + currentEvent.getName() + "\n" +
+                    "Start Time: " + currentEvent.getDateTime() + "\n" +
+                    "End Time: " + currentEvent.getEndTime() + "\n" +
+                    "All Day event: " + currentEvent.getAllDay() + "\n" +
+                    "Description: " + currentEvent.getDescription();
+                    this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                }
+            });
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event deleted successfully!"));
         } catch (Exception e) {

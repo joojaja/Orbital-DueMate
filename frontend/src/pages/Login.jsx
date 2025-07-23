@@ -43,10 +43,10 @@ function Login() {
                 navigate("/verify-otp");
             } else {
                 // Regular login
-                AuthenticationService.saveUserToken(response.data.token);
+                // AuthenticationService.saveUserToken(response.data.token);
                 AuthenticationService.login(formData.email, formData.password)
                                      .then(() => navigate("/home"))
-                navigate("/home");
+                // navigate("/home");
             }
         } catch (err) {
             console.log("error here");

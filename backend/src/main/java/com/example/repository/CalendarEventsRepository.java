@@ -9,6 +9,7 @@ import com.example.models.CalendarEvents;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import com.example.models.User;
 
 // Basically the queries that we perform on the CalendarEvents table simplified by JPA's Repository interface
@@ -19,6 +20,8 @@ public interface CalendarEventsRepository extends JpaRepository<CalendarEvents, 
     // To get all calendar events of a user/group of users
     List<CalendarEvents> findByUserIn(List<User> users);
     
+    Optional<CalendarEvents> findById(Long id);
+
     // To update a calendar event by its id
     @Modifying
     @Transactional // DB transaction
