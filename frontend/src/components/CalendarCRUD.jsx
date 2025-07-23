@@ -420,7 +420,7 @@ function CalendarCRUD() {
     }
 
     const handleDeleteEvent = () => {
-        axios.delete(apiURL + `/calendar/delete/${editFormData.id}`,
+        axios.delete(apiURL + `/calendar/delete/${editFormData.id}/${currUserId}`,
             { headers: { "Authorization": `Bearer ${jwtToken}` } })
             .then(response => {
                 setEditFormMessage("");
