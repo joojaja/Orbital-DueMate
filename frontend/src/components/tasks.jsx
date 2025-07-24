@@ -8,104 +8,11 @@ import authenticationService from "../services/authenticationService";
 import TaskCard from "./TaskCard"; // individual tasks as a component
 import NewTaskForm from "./NewTaskForm"; // new task form as a component
 
-const TaskColumn = React.memo(({ title, tasks, isCompleted, icon, showInput, setShowInput, newTask, handleTitleChange, handleDueChange, handleNotesChange, handleAddTask, handleCancelClick, handleDeleteTask, moveTask, handleEditTask }) => (
-    <Box sx={{
-        flex: 1,
-        minWidth: { xs: '100%', md: '300px' },
-        maxWidth: { xs: '100%', md: '400px' },
-    }}>
-        {/*TODO and COMPLETED top bar*/}
-        <Paper
-            sx={{
-                p: 2,
-                mb: 3,
-                borderRadius: 3,
-                bgcolor: isCompleted ? 'success.light' : 'primary.light',  // light green for completed, light blue for TODO
-                color: 'white', // color of text
-                height: '35px'
-            }}
-        >
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-            }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {icon}
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {title}
-                    </Typography>
-                    <Chip // show how many tasks left
-                        label={tasks.length}
-                        size="small"
-                        sx={{
-                            bgcolor: 'rgba(255,255,255,0.3)',
-                            color: 'white',
-                            fontWeight: 'bold'
-                        }}
-                    />
-                </Box>
-
-                {!isCompleted && (
-                    <IconButton
-                        onClick={() => setShowInput(!showInput)}
-                        sx={{ color: 'white' }}
-                    >
-                        <AddIcon />
-                    </IconButton>
-                )}
-            </Box>
-        </Paper>
-        {/*end of TODO and COMPLETED top bar*/}
-
-        {/* Add new task form */}
-        {showInput && !isCompleted && (
-            <NewTaskForm
-                newTask={newTask}
-                onTitleChange={handleTitleChange}
-                onDueChange={handleDueChange}
-                onNotesChange={handleNotesChange}
-                onAddTask={handleAddTask}
-                onCancelClick={handleCancelClick}
-            />
-        )}
-        {/* end of add new task form */}
-
-        {/* Tasks List */}
-        <Box sx={{
-            overflowY: 'auto',
-            pr: { xs: 0, md: 1 }
-        }}>
-            {tasks.length === 0 ? ( // if no task: display text that says no task
-                <Box sx={{
-                    textAlign: 'center',
-                    py: 4,
-                    color: 'text.secondary'
-                }}>
-                    <Typography sx={{ fontStyle: 'italic' }}>
-                        No {isCompleted ? 'completed' : 'todo'} tasks
-                    </Typography>
-                </Box>
-            ) : (
-                tasks.map((task, i) => (
-                    <TaskCard
-                        key={task.id || i}
-                        task={task}
-                        onDelete={() => handleDeleteTask(task.id)}
-                        onMove={() => moveTask(task, !isCompleted)}
-                        moveDirection={isCompleted ? "left" : "right"}
-                        onEdit={handleEditTask}
-                    />
-                ))
-            )}
-        </Box>
-    </Box>
-));
-
 export default function Tasks() {
     const [todo, setTodo] = useState([]);
     const [completed, setCompleted] = useState([]);
     const [showInput, setShowInput] = useState(false);
-    const [newTask, setNewTask] = useState({ title: "", due: "", notes: "" });
+    const [newTask, setNewTask] = useState({ title: "", due: "", notes: "", priority: "low" });
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -158,6 +65,11 @@ export default function Tasks() {
         setNewTask(prev => ({ ...prev, notes: e.target.value }));
     }, []);
 
+    const handlePriorityChange = useCallback((e) => {
+    setNewTask(prev => ({ ...prev, priority: e.target.value }));
+    }, []);
+
+
     const handleAddTask = useCallback(async (task) => {
         try {
             const response = await axios.post(`${apiURL}/api/tasks`, task, {
@@ -165,6 +77,11 @@ export default function Tasks() {
             });
 
             setTodo(prev => [...prev, response.data]);
+
+            // add 20 exp when adding new task
+            await axios.post(`${apiURL}/api/user/add-exp`, { amount: 20 }, {
+                headers: { "Authorization": `Bearer ${jwtToken}` }
+            });
 
             setNewTask({ title: "", due: "", notes: "" });
             setShowInput(false);
@@ -192,6 +109,14 @@ export default function Tasks() {
             }, {
                 headers: { "Authorization": `Bearer ${jwtToken}` }
             });
+            
+            // add 50 exp once task is completed
+            if (toCompleted) {
+                await axios.post(`${apiURL}/api/user/add-exp`, { amount: 50 }, {
+                    headers: { "Authorization": `Bearer ${jwtToken}` }
+                });
+            }
+
             fetchTasks();
         } catch (err) {
             console.error("Error moving task:", err);
@@ -213,6 +138,100 @@ export default function Tasks() {
         setNewTask({ title: "", due: "", notes: "" });
         setShowInput(false);
     }, []);
+
+    const TaskColumn = React.memo(({ title, tasks, isCompleted, icon, showInput, setShowInput, newTask, handleTitleChange, handleDueChange, handleNotesChange, handleAddTask, handleCancelClick, handleDeleteTask, moveTask, handleEditTask }) => (
+        <Box sx={{
+            flex: 1,
+            minWidth: { xs: '100%', md: '300px' },
+            maxWidth: { xs: '100%', md: '400px' },
+        }}>
+            {/*TODO and COMPLETED top bar*/}
+            <Paper
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 3,
+                    bgcolor: isCompleted ? 'success.light' : 'primary.light',  // light green for completed, light blue for TODO
+                    color: 'white', // color of text
+                    height: '35px'
+                }}
+            >
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {icon}
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                            {title}
+                        </Typography>
+                        <Chip // show how many tasks left
+                            label={tasks.length}
+                            size="small"
+                            sx={{
+                                bgcolor: 'rgba(255,255,255,0.3)',
+                                color: 'white',
+                                fontWeight: 'bold'
+                            }}
+                        />
+                    </Box>
+
+                    {!isCompleted && (
+                        <IconButton
+                            onClick={() => setShowInput(!showInput)}
+                            sx={{ color: 'white' }}
+                        >
+                            <AddIcon />
+                        </IconButton>
+                    )}
+                </Box>
+            </Paper>
+            {/*end of TODO and COMPLETED top bar*/}
+
+            {/* Add new task form */}
+            {showInput && !isCompleted && (
+                <NewTaskForm
+                    newTask={newTask}
+                    onTitleChange={handleTitleChange}
+                    onDueChange={handleDueChange}
+                    onNotesChange={handleNotesChange}
+                    onPriorityChange={handlePriorityChange}
+                    onAddTask={handleAddTask}
+                    onCancelClick={handleCancelClick}
+                />
+            )}
+            {/* end of add new task form */}
+
+            {/* Tasks List */}
+            <Box sx={{
+                overflowY: 'auto',
+                pr: { xs: 0, md: 1 }
+            }}>
+                {tasks.length === 0 ? ( // if no task: display text that says no task
+                    <Box sx={{
+                        textAlign: 'center',
+                        py: 4,
+                        color: 'text.secondary'
+                    }}>
+                        <Typography sx={{ fontStyle: 'italic' }}>
+                            No {isCompleted ? 'completed' : 'todo'} tasks
+                        </Typography>
+                    </Box>
+                ) : (
+                    tasks.map((task, i) => (
+                        <TaskCard
+                            key={task.id || i}
+                            task={task}
+                            onDelete={() => handleDeleteTask(task.id)}
+                            onMove={() => moveTask(task, !isCompleted)}
+                            moveDirection={isCompleted ? "left" : "right"}
+                            onEdit={handleEditTask}
+                        />
+                    ))
+                )}
+            </Box>
+        </Box>
+    ));
 
     return (
         <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>

@@ -3,6 +3,8 @@ package com.example.controllers;
 import java.util.Map;
 import java.util.List;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,6 +17,7 @@ import com.example.security.services.*;
 import com.example.security.jwt.*;
 import com.example.models.*;
 import com.example.entities.*;
+import com.example.repository.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +29,7 @@ public class UserController {
     private final UserService userService;
     private final JWTUtility jwtUtility;
     private final OurUserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @GetMapping("/2fa-status")
     public ResponseEntity<?> get2FAStatus(@RequestHeader("Authorization") String tokenHeader) {
@@ -77,6 +81,29 @@ public class UserController {
 
         return ResponseEntity.ok(Map.of("token", jwt));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        
+        Map<String, Object> profileData = Map.of(
+            "exp", user.getExp(),
+            "level", user.getLevel(),
+            "tasksCompleted", user.getTasksCompleted(),
+            "dailyStreak", user.getDailyStreak()
+        );
+        
+        return ResponseEntity.ok(profileData);
+    }
+
+    @PostMapping("/add-exp")
+    public ResponseEntity<?> addExp(@RequestHeader("Authorization") String tokenHeader, @RequestBody Map<String, Integer> body) {
+        String email = jwtUtility.getEmailFromJWT(tokenHeader.substring(7));
+        int amount = body.get("amount");
+        userService.addExp(email, amount);
+        return ResponseEntity.ok(Map.of("message", "EXP added"));
+    }
+
 }
 
 

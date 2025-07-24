@@ -1,6 +1,6 @@
 // NewTaskForm.js
 import React, { useCallback, useRef, useEffect } from "react";
-import { Box, Button, TextField, Card, CardContent } from "@mui/material";
+import {  MenuItem, Select, InputLabel, FormControl, Box, Button, TextField, Card, CardContent } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 
 const NewTaskForm = React.memo(({
@@ -8,6 +8,7 @@ const NewTaskForm = React.memo(({
     onTitleChange,
     onDueChange,
     onNotesChange,
+    onPriorityChange,
     onAddTask,
     onCancelClick
 }) => {
@@ -62,6 +63,19 @@ const NewTaskForm = React.memo(({
                         multiline
                         rows={3}
                     />
+                    <FormControl size="small">
+                        <InputLabel id="priority-label">Priority</InputLabel>
+                        <Select
+                            labelId="priority-label"
+                            value={newTask.priority || "green"}
+                            label="Priority"
+                            onChange={onPriorityChange}
+                        >
+                            <MenuItem value="low">Low</MenuItem>
+                            <MenuItem value="medium">Medium</MenuItem>
+                            <MenuItem value="high">High</MenuItem>
+                        </Select>
+                    </FormControl>
 
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                         <Button

@@ -12,6 +12,7 @@ public class Task {
     private LocalDate due;
     private String notes;
     private boolean completed;
+    private String priority; //  "low", "medium", "high"
     
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -36,6 +37,9 @@ public class Task {
     public User getUser() {
         return user;
     }
+    public String getPriority() {
+        return priority;
+    }
 
     // Setters
     public void setId(Long id) {
@@ -55,5 +59,8 @@ public class Task {
     }
     public void setUser(User user) {
         this.user = user;
+    }
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 }

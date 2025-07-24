@@ -13,6 +13,7 @@ import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import java.time.Instant;
+import java.time.LocalDate;
 
 // Definition of the User table
 
@@ -44,6 +45,18 @@ public class User {
     @Column(name = "updated_at")
     @LastModifiedDate
     private Instant updatedAt;
+
+    @Column(nullable = false) // name = exp
+    private int exp = 0; // default to 0
+
+    @Column(name = "tasks_completed", nullable = false)
+    private int tasksCompleted = 0;
+
+    @Column(name = "last_task_completion_date")
+    private LocalDate lastTaskCompletionDate;
+
+    @Column(name = "daily_streak", nullable = false)
+    private int dailyStreak = 0;
 
     // column for OTP secret key
     @Column(name = "otp_secret_key")
@@ -77,4 +90,9 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = Instant.now();
     }
+
+    public int getLevel() {
+        return (this.exp / 100) + 1;
+    }
+
 }
