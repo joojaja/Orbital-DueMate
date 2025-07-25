@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.models.CalendarInvites;
 import com.example.models.User;
 import java.util.Optional;
+import java.util.List;
 
 // Basically the queries that we perform on the CalendarInvites table simplified by JPA's Repository interface
 public interface CalendarInvitesRepository extends JpaRepository<CalendarInvites, Long> {
+    List<CalendarInvites> findByInvitedByUser(User user);
+
     // To update a calendar invite status by its id
     @Modifying
     @Transactional // DB transaction

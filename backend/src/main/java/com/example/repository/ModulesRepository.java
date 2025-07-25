@@ -38,6 +38,27 @@ public interface ModulesRepository extends JpaRepository<Modules, Long> {
     Integer countForBreadthAndDepth(@Param("user") User user, @Param("category") String category, 
     @Param("subcategory") String subcategory, @Param("subsubcategory") String subsubcategory, @Param("level") Integer level);
 
+    // Get count for number of that category
+    @Transactional
+    @Query("SELECT COUNT(m) FROM Modules m where m.user = :user AND m.category = :category")
+    Integer countForCategory(@Param("user") User user, @Param("category") String category);
+
+    // Get count for number of that category and subcategory
+    @Transactional
+    @Query("SELECT COUNT(m) FROM Modules m where m.user = :user AND m.category = :category AND m.subcategory = :subcategory")
+    Integer countForCategoryAndSubCategory(@Param("user") User user, @Param("category") String category, @Param("subcategory") String subcategory);
+
+    // Get count for number of that category and level
+    @Transactional
+    @Query("SELECT COUNT(m) FROM Modules m where m.user = :user AND m.category = :category AND m.level = :level")
+    Integer countForCategoryAndLevel(@Param("user") User user, @Param("category") String category, @Param("level") Integer level);
+
+    // Get credit sum for number of that category and subcategory and level
+    @Transactional
+    @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.category = :category AND m.subcategory = :subcategory AND m.level = :level")
+    Integer countForCategoryAndSubCategoryAndLevelCreditSum(@Param("user") User user, @Param("category") String category, @Param("subcategory") String subcategory, 
+    @Param("level") Integer level);
+
     // Get Breadth and Depth 4k credits sum
     @Transactional
     @Query("SELECT SUM(m.moduleCredit) FROM Modules m where m.user = :user AND m.category = :category AND m.level = :level")

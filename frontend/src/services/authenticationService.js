@@ -17,11 +17,10 @@ class AuthenticationService {
       }
       return response.data;
     })
-    // .catch(error => {console.log("Error happened during login: " + error)});
+    .catch(error => {console.log("Error happened during login: " + error)});
   }
 
   logout() {
-    // localStorage.removeItem('user');
     localStorage.clear();
     window.location.href = '/login';
   }
@@ -32,7 +31,7 @@ class AuthenticationService {
       email,
       password
     })
-    // .catch(error => {console.log("Error happened during register: " + error)});
+    .catch(error => {console.log("Error happened during register: " + error)});
   }
 
   getCurrentUser() {
@@ -40,29 +39,27 @@ class AuthenticationService {
   }
 
   saveUserToken = (input) => {
-  const existingUser = JSON.parse(localStorage.getItem("user")) || {};
+    const existingUser = JSON.parse(localStorage.getItem("user")) || {};
 
-  if (typeof input === "string") {
-    // Case 1: update only the token
-    const updatedUser = { ...existingUser, token: input };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    
-  } else if (typeof input === "object" && input !== null && input.token) {
-    // Case 2: merge the new object with existing user info
-    const updatedUser = { ...existingUser, ...input };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-  } else {
-    console.warn("saveUserToken error:", input);
-  }
-};
+    if (typeof input === "string") {
+        // Case 1: update only the token
+        const updatedUser = { ...existingUser, token: input };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+    } else if (typeof input === "object" && input !== null && input.token) {
+        // Case 2: merge the new object with existing user info
+        const updatedUser = { ...existingUser, ...input };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    } else {
+        console.warn("saveUserToken error:", input);
+    }
+  };
 
 
   getUserToken() {
     const user = this.getCurrentUser();
     return user?.token || null;
   }
-
-    
 }
 
 const authService = new AuthenticationService();

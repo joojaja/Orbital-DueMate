@@ -32,22 +32,16 @@ function Login() {
         e.preventDefault();
         setError(""); // clear previous error
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
-                email: formData.email,
-                password: formData.password,
+            AuthenticationService.login(formData.email, formData.password)
+            .then(response =>  {
+                if (response.otpRequired) {
+                    // Save temp token and navigate to OTP page
+                    localStorage.setItem("tempToken", response.data.tempToken);
+                    navigate("/verify-otp");
+                } else {
+                    navigate("/home");
+                }
             });
-
-            if (response.data.otpRequired) {
-                // Save temp token and navigate to OTP page
-                localStorage.setItem("tempToken", response.data.tempToken);
-                navigate("/verify-otp");
-            } else {
-                // Regular login
-                AuthenticationService.saveUserToken(response.data.token);
-                AuthenticationService.login(formData.email, formData.password)
-                                     .then(() => navigate("/home"))
-                navigate("/home");
-            }
         } catch (err) {
             console.log("error here");
             setError("Invalid login");

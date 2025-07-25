@@ -8,8 +8,9 @@ import jakarta.persistence.EntityNotFoundException;
 
 import com.example.models.*;
 import com.example.entities.*;
-import java.util.List;
 
+import java.util.List;
+import com.example.security.services.*;
 
 @RestController
 // Set mapping
@@ -18,11 +19,14 @@ public class CalendarController {
     private final CalendarEventsRepository calendarEventsRepository;
     private final UserRepository userRepository;
     private final CalendarInvitesRepository calendarInvitesRepository;
+    private final EmailService emailService;
 
-    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository, CalendarInvitesRepository calendarInvitesRepository) {
+    public CalendarController(CalendarEventsRepository calendarEventsRepository, UserRepository userRepository, CalendarInvitesRepository calendarInvitesRepository
+    , EmailService emailService) {
         this.userRepository = userRepository;
         this.calendarEventsRepository = calendarEventsRepository;
         this.calendarInvitesRepository = calendarInvitesRepository;
+        this.emailService = emailService;
     }
 
     @PostMapping("/calendar/read")
@@ -59,11 +63,35 @@ public class CalendarController {
     public ResponseEntity<?> createNewCalendarEvent(@RequestBody CalendarEventJSON calendarEventJSON) {
         try {
             // Create new calendar event
-            User user = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
-            User editingUser = this.userRepository.findById(calendarEventJSON.getCreatedByUserId()).orElseThrow(() -> new Exception("User not found"));
+            User calendarOwner = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            User user = this.userRepository.findById(calendarEventJSON.getCreatedByUserId()).orElseThrow(() -> new Exception("User not found"));
+
             CalendarEvents calendarEvents = new CalendarEvents(calendarEventJSON.getName(), calendarEventJSON.getDateTime(), calendarEventJSON.getEndTime(),
-            calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,user, editingUser);
+            calendarEventJSON.getAllDay(), calendarEventJSON.getDescription() ,calendarOwner, user);
             this.calendarEventsRepository.save(calendarEvents);
+
+            String subject = "New Calendar Event created for " + calendarOwner.getName() + "'s calendar";
+            String text = "A new calendar event has been created by " + user.getName() + " for " + calendarOwner.getName() + "'s calendar.\n" +
+                        "Event Name: " + calendarEventJSON.getName() + "\n" +
+                        "Start Time: " + calendarEventJSON.getDateTime() + "\n" +
+                        "End Time: " + calendarEventJSON.getEndTime() + "\n" +
+                        "All Day event: " + calendarEventJSON.getAllDay() + "\n" +
+                        "Description: " + calendarEventJSON.getDescription();
+
+            // Send email notifications to all users invited by the owner of the calendar
+            this.calendarInvitesRepository.findByInvitedByUser(calendarOwner)
+            .forEach(invite -> {
+                    if (!invite.getUser().equals(user)) {
+                        String receiverEmail = invite.getUser().getEmail();
+                        this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                    }
+            });
+
+            // We also send an email to the owner of the calendar if they are not the one creating the event
+            if (!calendarOwner.equals(user)) {
+                String receiverEmail = calendarOwner.getEmail();
+                this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+            }
 
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event created successfully!"));
@@ -77,8 +105,34 @@ public class CalendarController {
         try {
             // Update calendar event
             User user = this.userRepository.findById(calendarEventJSON.getUserId()).orElseThrow(() -> new Exception("User not found"));
+            CalendarEvents currentEvent = this.calendarEventsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Calendar event not found"));
+
             this.calendarEventsRepository.updateEventbyId(id, calendarEventJSON.getName(), calendarEventJSON.getDateTime(), 
             calendarEventJSON.getEndTime(), calendarEventJSON.getAllDay(), calendarEventJSON.getDescription(), user);
+
+            User calendarOwner = currentEvent.getUser();
+
+            String subject = "Calendar Event updated for " + calendarOwner.getName() + "'s calendar";
+            String text = "A calendar event has been updated by " + user.getName() + " for " + calendarOwner.getName() + "'s calendar.\n" +
+            "Event Name: " + currentEvent.getName() + " -> " + calendarEventJSON.getName() + "\n" +
+            "Start Time: " + currentEvent.getDateTime() + " -> " + calendarEventJSON.getDateTime() + "\n" +
+            "End Time: " + currentEvent.getEndTime() + " -> " + calendarEventJSON.getEndTime() + "\n" +
+            "All Day event: " + currentEvent.getAllDay() + " -> " + calendarEventJSON.getAllDay() + "\n" +
+            "Description: " + currentEvent.getDescription() + " -> " + calendarEventJSON.getDescription();
+
+            // Send email notifications to all users invited by the owner of the calendar
+            this.calendarInvitesRepository.findByInvitedByUser(calendarOwner).forEach(invite -> {
+                if (!invite.getUser().equals(user)) {
+                    String receiverEmail = invite.getUser().getEmail();
+                    this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                }
+            });
+            
+            // We also send an email to the owner of the calendar if they are not the one editing the event
+            if (!calendarOwner.equals(user)) {
+                String receiverEmail = calendarOwner.getEmail();
+                this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+            }
 
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event updated successfully!"));
@@ -87,12 +141,37 @@ public class CalendarController {
         }
     }
 
-    @DeleteMapping("/calendar/delete/{id}")
-    public ResponseEntity<?> deleteCalendarEvent(@PathVariable Long id) {
+    @DeleteMapping("/calendar/delete/{id}/{currUserId}")
+    public ResponseEntity<?> deleteCalendarEvent(@PathVariable Long id, @PathVariable Long currUserId) {
         try {
             // Delete calendar event
+            User user = this.userRepository.findById(currUserId).orElseThrow(() -> new Exception("User not found"));
+            CalendarEvents currentEvent = this.calendarEventsRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Calendar event not found"));
+            User calendarOwner = currentEvent.getUser();
+
             this.calendarEventsRepository.deleteEventById(id);
 
+            String subject = "Calendar Event deleted for " + calendarOwner.getName() + "'s calendar";
+            String text = "A calendar event has been deleted by " + user.getName() + " for " + calendarOwner.getName() + "'s calendar.\n" +
+            "Event Name: " + currentEvent.getName() + "\n" +
+            "Start Time: " + currentEvent.getDateTime() + "\n" +
+            "End Time: " + currentEvent.getEndTime() + "\n" +
+            "All Day event: " + currentEvent.getAllDay() + "\n" +
+            "Description: " + currentEvent.getDescription();
+
+            // Send email notifications to all users invited by the owner of the calendar
+            this.calendarInvitesRepository.findByInvitedByUser(calendarOwner).forEach(invite -> {
+                if (!invite.getUser().equals(user)) {
+                    String receiverEmail = invite.getUser().getEmail();
+                    this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+                }
+            });
+
+            // We also send an email to the owner of the calendar if they are not the one deleting the event
+            if (!calendarOwner.equals(user)) {
+                String receiverEmail = calendarOwner.getEmail();
+                this.emailService.sendSimpleEmail(receiverEmail, subject, text);
+            }
             // Return a success message
             return ResponseEntity.status(200).body(new MessageResponseJSON("Calendar event deleted successfully!"));
         } catch (Exception e) {

@@ -43,37 +43,6 @@ public class AuthController {
         this.courseSelectionRepository = courseSelectionRepository;
     }
 
-    /*
-
-    // the endpoint for user login; /api/auth/signin
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestJSON loginRequest) {
-        try {
-            // Authenticate/ Valid the user using the authentication manager
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-            // Set authentication in the security context
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // Generate JWT token
-            String jwt = this.jwtUtility.generateJwtToken(authentication);
-
-            // Get all of the user details from the authentication object
-            OurUserDetails userDetails = (OurUserDetails) authentication.getPrincipal();
-
-            // Return JSON response with the JWT token and user details
-            return ResponseEntity.ok(new JwtResponseJSON(jwt, userDetails.getId(),
-                userDetails.getName(), userDetails.getUsername(), "Bearer"));
-
-        } catch (Exception e) {
-            // Return error if invalid details
-            return ResponseEntity.status(401).body(new MessageResponseJSON("Invalid username or password"));
-        }
-    }
-
-    */
-
     @PostMapping("/signup") // the endpoint for user register; /api/auth/signin
     public ResponseEntity<?> registerUser(@RequestBody SignupRequestJSON signUpRequest) {
         // Check if the email is already taken
