@@ -15,6 +15,7 @@ import com.google.zxing.WriterException;
 import com.example.security.services.*;
 import com.example.security.jwt.*;
 import com.example.entities.*;
+import com.example.models.*;
 import com.example.repository.*;
 
 import lombok.RequiredArgsConstructor;
