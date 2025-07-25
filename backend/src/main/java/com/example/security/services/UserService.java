@@ -1,5 +1,8 @@
 package com.example.security.services;
 
+import java.util.Optional;
+
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
@@ -66,4 +69,12 @@ public class UserService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow();
     }
+
+    public void addExp(String email, int amount) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setExp(user.getExp() + amount);
+        userRepository.save(user);
+    }
+
 }

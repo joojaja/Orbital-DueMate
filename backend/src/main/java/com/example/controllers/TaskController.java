@@ -8,7 +8,7 @@ import com.example.repository.*;
 import com.example.security.services.*;
 import com.example.models.*;
 import com.example.entities.*;
-
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -41,6 +41,30 @@ public class TaskController {
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
         task.setId(id);
+        User user = getCurrentUser();
+        // Fetch the existing task to detect if it just got marked as completed
+        Task existing = taskService.getTaskById(id);
+
+        boolean wasCompleted = existing.isCompleted();
+        boolean nowCompleted = task.isCompleted();
+
+        if (!wasCompleted && nowCompleted) {
+            // Update streak
+            LocalDate today = LocalDate.now();
+            LocalDate lastDate = user.getLastTaskCompletionDate();
+
+            if (lastDate == null || !lastDate.equals(today)) {
+                if (lastDate != null && lastDate.plusDays(1).equals(today)) {
+                    user.setDailyStreak(user.getDailyStreak() + 1); // +1 streak
+                } else {
+                    user.setDailyStreak(1); // reset
+                }
+                user.setLastTaskCompletionDate(today);
+            }
+            user.setTasksCompleted(user.getTasksCompleted() + 1); // increase total task counter
+            userRepository.save(user); // save streak
+        }
+
         return ResponseEntity.ok(taskService.saveTask(task));
     }
     

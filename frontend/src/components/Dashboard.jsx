@@ -15,16 +15,18 @@ import Tasks from "./Tasks";
 import Calendar from "./CalendarCRUD";
 import GradPlanning from "./GradPlanning";
 import Settings from "./Settings"
+import Profile from "./Profile"
 
 // Tab names
-const TAB_NAMES = ["Calendar", "Tasks", "Planning", "Settings"];
+const TAB_NAMES = ["Calendar", "Tasks", "Planning", "Settings", "Profile"];
 
 // Map tab names to components
 const TAB_COMPONENTS = {
     Calendar: <Calendar />,
     Tasks: <Tasks />,
     Planning: <GradPlanning />,
-    Settings: <Settings />
+    Settings: <Settings />,
+    Profile: <Profile />
 };
 
 export default function Dashboard() {

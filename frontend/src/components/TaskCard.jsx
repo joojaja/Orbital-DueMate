@@ -4,7 +4,7 @@
 // 1. color code / priority colouring of task card
 
 import React, { useState } from "react";
-import { Box, Typography, Button, TextField, Card, CardContent, IconButton, Chip, useTheme, useMediaQuery } from "@mui/material";
+import { Box, Typography, Button, TextField, Card, CardContent, IconButton, Chip, useTheme, useMediaQuery, MenuItem} from "@mui/material";
 import { Delete as DeleteIcon, Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, ArrowForward as ArrowForwardIcon, ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 
 // calculate number of days left from today
@@ -26,6 +26,21 @@ export default function TaskCard({ task, onDelete, onMove, moveDirection, onEdit
     {/* for editing and saving the task */}
     const [isEditing, setIsEditing] = useState(false);
     const [editedTask, setEditedTask] = useState({ ...task });
+
+    const getPriorityColor = () => {
+        switch (task.priority) {
+            case 'high':
+            return '#ffcdd2'; // red
+            case 'medium':
+            return '#fff9c4'; // yellow
+            case 'low':
+            return '#c8e6c9'; // green
+            default:
+            return '#f5f5f5'; // neutral/gray
+        }
+    };
+
+
 
     const handleEditChange = (e) => {
         setEditedTask({
@@ -56,6 +71,7 @@ export default function TaskCard({ task, onDelete, onMove, moveDirection, onEdit
         <Card sx={{ 
                 mb: 4, // margin between cards
                 borderRadius: 2,
+                backgroundColor: getPriorityColor(),
                 '&:hover': { // hover move up
                     elevation: 4,
                     transform: 'translateY(-2px)',
@@ -157,6 +173,19 @@ export default function TaskCard({ task, onDelete, onMove, moveDirection, onEdit
                             label="Notes"
                             placeholder="Optional notes..."
                         />
+                        <TextField
+                            name="priority"
+                            select
+                            label="Priority"
+                            value={editedTask.priority || ""}
+                            onChange={handleEditChange}
+                            variant="outlined"
+                            size="small"
+                            >
+                            <MenuItem value="low">Low</MenuItem>
+                            <MenuItem value="medium">Medium</MenuItem>
+                            <MenuItem value="high">High</MenuItem>
+                        </TextField>
                         <Button // save button
                             onClick={handleSave} 
                             variant="contained" 
