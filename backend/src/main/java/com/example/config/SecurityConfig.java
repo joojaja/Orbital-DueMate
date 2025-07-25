@@ -69,10 +69,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource configureCORS() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-        "http://localhost:3000",
-        "https://orbital-due-mate.vercel.app/",
-        "orbital-due-mate-git-main-isaacs-projects-f278a037.vercel.app")); // Allowed endpoint to call backend
+        config.setAllowedOriginPatterns(List.of("*"));
+        // config.setAllowedOrigins(List.of(
+        // "http://localhost:3000",
+        // "https://orbital-due-mate.vercel.app/",
+        // "orbital-due-mate-git-main-isaacs-projects-f278a037.vercel.app")); // Allowed endpoint to call backend
         config.addAllowedMethod("*"); // Allow all REST methods call
         config.addAllowedHeader("Authorization"); // Allow headers with Authorization which we use for JWT
         config.addAllowedHeader("Content-Type");

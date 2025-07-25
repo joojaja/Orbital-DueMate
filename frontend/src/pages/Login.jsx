@@ -41,7 +41,8 @@ function Login() {
                 } else {
                     navigate("/home");
                 }
-            });
+            })
+            .catch(error => {console.log("Error happened during login: " + error)});
         } catch (err) {
             console.log("error here");
             setError("Invalid login");
