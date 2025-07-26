@@ -2,7 +2,6 @@ package com.example.controllers;
 
 import java.util.Map;
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +15,6 @@ import com.example.security.services.*;
 import com.example.security.jwt.*;
 import com.example.entities.*;
 import com.example.models.*;
-import com.example.repository.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,7 +26,6 @@ public class UserController {
     private final UserService userService;
     private final JWTUtility jwtUtility;
     private final OurUserDetailsService userDetailsService;
-    private final UserRepository userRepository;
 
     @GetMapping("/2fa-status")
     public ResponseEntity<?> get2FAStatus(@RequestHeader("Authorization") String tokenHeader) {
