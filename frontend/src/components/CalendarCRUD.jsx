@@ -29,7 +29,7 @@ function CalendarCRUD() {
     const jwtToken = token ? token.token : "";
 
     // State for id of current user's calendar
-    const [currCalendarUserId, setCurrCalendarUserId] = useState(token.id);
+    const [currCalendarUserId, setCurrCalendarUserId] = useState(currUserId);
 
     // State for calendar events
     const [events, setEvents] = useState([]);

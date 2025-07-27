@@ -31,21 +31,21 @@ function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError(""); // clear previous error
-        try {
-            AuthenticationService.login(formData.email, formData.password)
-            .then(response =>  {
-                if (response.otpRequired) {
-                    // Save temp token and navigate to OTP page
-                    localStorage.setItem("tempToken", response.data.tempToken);
-                    navigate("/verify-otp");
-                } else {
-                    navigate("/home");
-                }
-            });
-        } catch (err) {
+
+        AuthenticationService.login(formData.email, formData.password)
+        .then(response =>  {
+            if (response.otpRequired) {
+                // Save temp token and navigate to OTP page
+                localStorage.setItem("tempToken", response.data.tempToken);
+                navigate("/verify-otp");
+            } else {
+                navigate("/home");
+            }
+        })
+        .catch(err => {
             console.log("error here");
             setError("Invalid login");
-        }
+        });
     };
 
     const handleFormChange = (event) => {
