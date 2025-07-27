@@ -139,6 +139,8 @@ export default function Tasks() {
         setShowInput(false);
     }, []);
 
+    const [focusedField, setFocusedField] = useState("title");
+
     const TaskColumn = React.memo(({ title, tasks, isCompleted, icon, showInput, setShowInput, newTask, handleTitleChange, handleDueChange, handleNotesChange, handleAddTask, handleCancelClick, handleDeleteTask, moveTask, handleEditTask }) => (
         <Box sx={{
             flex: 1,
@@ -198,6 +200,8 @@ export default function Tasks() {
                     onPriorityChange={handlePriorityChange}
                     onAddTask={handleAddTask}
                     onCancelClick={handleCancelClick}
+                    focusedField={focusedField}
+                    setFocusedField={setFocusedField}
                 />
             )}
             {/* end of add new task form */}
