@@ -36,14 +36,14 @@ function Login() {
         .then(response =>  {
             if (response.otpRequired) {
                 // Save temp token and navigate to OTP page
-                localStorage.setItem("tempToken", response.data.tempToken);
+                localStorage.setItem("tempToken", response.tempToken);
                 navigate("/verify-otp");
             } else {
                 navigate("/home");
             }
         })
         .catch(err => {
-            console.log("error here");
+            console.log(err);
             setError("Invalid login");
         });
     };
