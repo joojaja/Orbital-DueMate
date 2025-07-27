@@ -190,7 +190,7 @@ function GradPlanning() {
 
                 // Reset module autocomplete dropdown
                 setCurrentCourse(null);
-                setSelectedModule({});
+                // setSelectedModule({});
             })
             .catch(error => console.log(error));
     }

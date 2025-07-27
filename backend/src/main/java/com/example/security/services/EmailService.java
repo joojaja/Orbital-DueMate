@@ -22,7 +22,6 @@ public class EmailService{
 
     @Async
     public void sendSimpleEmail(String receiverEmail, String subject, String text) {
-        System.out.println(" on thread " + Thread.currentThread().getName());
         SimpleMailMessage message = new SimpleMailMessage(); 
         message.setFrom(senderEmail);
         message.setTo(receiverEmail); 
