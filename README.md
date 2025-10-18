@@ -1,4 +1,8 @@
 # DueMate README
+<img width="1250" height="500" alt="image" src="https://github.com/user-attachments/assets/dd8e705d-3798-4231-85cc-735f32a8a526" />
+<img width="1250" height="500" alt="image" src="https://github.com/user-attachments/assets/0694bd11-4849-4a5a-abda-c954ad67e91d" />
+<img width="1250" height="500" alt="image" src="https://github.com/user-attachments/assets/47dbf5b3-b650-48ef-b337-5d0923aa2f01" />
+
 
 ## DueMate
 [![My Skills](https://skillicons.dev/icons?i=html,css,js,react,spring,vercel,supabase,docker)](https://skillicons.dev)
@@ -9,7 +13,7 @@ Read the full README [here](https://docs.google.com/document/d/15fy2QGhf0_RZ2yMe
 
 Completed as part of NUS Orbital – Apollo 11
 
-## What I did and learnt
+## What I learnt
 - Adopted 2-week agile sprints based on milestones and deadlines
 - Held weekly standup with project partner to plan the features to work on
 - Integrated JSON Web Token (JWT) for secure web authentication
@@ -25,15 +29,14 @@ Completed as part of NUS Orbital – Apollo 11
 
 ## Launching DueMate
 ### Docker
-
-
+1. Install Docker
+2. Run ```docker compose --build -d```
 
 ### Manual
 #### Front-end Requirements
 1. NodeJS
 2. Create .env file
   > REACT_APP_API_URL={YOUR BACKEND URL eg. http://localhost:8081}
-3. Edit APIURL
 
 ```bash
 cd frontend  
@@ -54,7 +57,6 @@ npm start
   > JWT_SECRET={YOUR JWT SECRET KEY}  
   > EMAIL_USER={THE EMAIL ADDRESS TO SEND EMAILS TO USERS}  
   > EMAIL_PASSWORD={THE EMAIL PASSWORD CONFIGURED ON GMAIL's APP PASSWORD}  
-7. Edit APIURL
 
 ```bash  
 cd backend  
