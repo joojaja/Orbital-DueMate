@@ -2,8 +2,8 @@
 node_modules/
 dist/
 build/
-#.env
-#.env.*           # .env.development, .env.local
+.env
+.env.*           # .env.development, .env.local
 *.log
 
 # === Vite/CRA Temp Files ===
@@ -21,11 +21,12 @@ build/
 .gradle/
 
 # === Database ===
-#*.db
+*.db
 *.sqlite
 *.sql             # ignore dumps with sensitive data
 /db/*.sql         # optionally ignore database SQL scripts
 !db/init.sql      # keep initial schema if safe
+postgres_data/
 
 # === IDE / Editor ===
 .vscode/
