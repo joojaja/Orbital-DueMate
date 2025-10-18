@@ -13,13 +13,14 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
 
   backend:
+    #build: ./backend
     image: joojaja/orbital_duemate_backend:latest
     container_name: duemate_backend
     restart: always
     depends_on:
       - db
     environment:
-      PORT: 8080
+      PORT: 8081
       DB_URL: jdbc:postgresql://db:5432/orbitaldb
       DB_USER: postgres
       DB_PW: postgres
@@ -27,13 +28,11 @@ services:
       EMAIL_USER: test@gmail.com
       EMAIL_PASSWORD: test
     ports:
-      - "8080:8080"
+      - "8081:8081"
 
   frontend:
-    build:
-      image: joojaja/orbital_duemate_frontend:latest
-      args:
-        REACT_APP_API_URL: http://localhost:8080
+    #build: ./frontend
+    image: joojaja/orbital_duemate_frontend:latest
     container_name: duemate_frontend
     depends_on:
       - backend

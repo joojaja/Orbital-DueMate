@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // This file contains the AuthService class which handles authentication-related operations
 // like login, logout, registration, and fetching the current user.
-const apiURL = `${process.env.REACT_APP_API_URL}/api/auth/`;
+//const apiURL = `${process.env.REACT_APP_API_URL}/api/auth/`;
+const apiURL = `/api/auth/`;
 
 class AuthenticationService {
   login(email, password, otpCode) {
