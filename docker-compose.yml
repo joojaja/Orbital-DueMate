@@ -13,8 +13,7 @@ services:
       - ./postgres_data:/var/lib/postgresql/data
 
   backend:
-    #build: ./backend
-    image: joojaja/orbital_duemate_backend:latest
+    build: ./backend
     container_name: duemate_backend
     restart: always
     depends_on:
@@ -31,8 +30,10 @@ services:
       - "8081:8081"
 
   frontend:
-    #build: ./frontend
-    image: joojaja/orbital_duemate_frontend:latest
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://localhost:8081
     container_name: duemate_frontend
     depends_on:
       - backend
