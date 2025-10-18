@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: orbitaldb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: duemate_backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PORT: 8081
+      DB_URL: jdbc:postgresql://db:5432/orbitaldb
+      DB_USER: postgres
+      DB_PW: postgres
+      JWT_SECRET: k/2Y+oCMpwwy74Yo0pN8borzfDYgDmHXu5gHNHO4eNAN2GBBnjhCCcWCEfZwuYuyUE9ZXS7dTeIxApILc7Hx4w==
+      EMAIL_USER: test@gmail.com
+      EMAIL_PASSWORD: test
+    ports:
+      - "8081:8081"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://localhost:8081
+    container_name: duemate_frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:

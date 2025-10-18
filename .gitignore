@@ -26,6 +26,7 @@ build/
 *.sql             # ignore dumps with sensitive data
 /db/*.sql         # optionally ignore database SQL scripts
 !db/init.sql      # keep initial schema if safe
+postgres_data/
 
 # === IDE / Editor ===
 .vscode/
